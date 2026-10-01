@@ -491,3 +491,4 @@ app.post('/api/image/edit', upload.single('image'), async (req, res) => {
 });
 
 app.listen(PORT, () => console.log('LikeChat jalan di http://localhost:' + PORT));
+// redeploy: pastikan logo baru ikut ter-deploy
