@@ -267,7 +267,7 @@ const TEXT_FIRST_BYTE_TIMEOUT = (() => {
 })();
 // Identitas AI LikeChat: disuntik sebagai system prompt di setiap chat.
 // Kalau SYSTEM_PROMPT di .env kosong, identitas dibuat otomatis per model
-// dari nama versinya (label), mis. likechat-flash-1.0.
+// dari nama versinya (label), mis. sr.flash.0.1.
 function buildIdentity(label) {
   return 'Kamu adalah ' + label + ', model AI buatan Hestia Sri Rose dari Keluarga Besar SR Produksi untuk aplikasi LikeChat. ' +
     'Jika pengguna bertanya siapa kamu, model apa, atau versi berapa, jawablah dengan nama model ini: ' + label + '. ' +
