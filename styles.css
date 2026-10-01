@@ -80,7 +80,9 @@ button svg{display:block;width:22px;height:22px}
 .msg.ai small{font-size:12px;color:var(--ink-dim)}
 .msg.ai .gen-img{display:block;max-width:100%;border-radius:14px;margin:6px 0;box-shadow:0 6px 20px rgba(0,0,0,.45)}
 .typing{display:inline-flex;gap:10px;padding:10px 0;align-items:center}
-.typing .spin{display:inline-flex;gap:5px;align-items:center;flex:none;height:24px}
+.typing .spin{display:inline-flex;gap:5px;align-items:center;flex:none;height:24px;
+  animation:spinRow 4s linear infinite}
+@keyframes spinRow{to{transform:rotate(360deg)}}
 .typing .spin i{width:8px;height:8px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),var(--ink-dim) 70%);
   box-shadow:inset 1px 1px 2px rgba(255,255,255,.45),inset -1px -1px 2px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.5);
