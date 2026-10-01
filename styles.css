@@ -82,9 +82,9 @@ button svg{display:block;width:22px;height:22px}
 .typing{display:inline-flex;gap:10px;padding:10px 0;align-items:center}
 .typing .spin{width:28px;height:28px;position:relative;flex:none;animation:orbitSpin 2s linear infinite}
 .typing .spin i{position:absolute;width:8px;height:8px;transform:rotate(45deg);border-radius:2px}
-.typing .spin i:nth-child(1){top:0;left:10px;background:#22d3ee;box-shadow:0 0 6px rgba(34,211,238,.7)}
-.typing .spin i:nth-child(2){top:10px;right:0;background:#a78bfa;box-shadow:0 0 6px rgba(167,139,250,.7)}
-.typing .spin i:nth-child(3){bottom:0;left:10px;background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.7)}
+.typing .spin i:nth-child(1){top:0;left:10px;background:#161616;box-shadow:0 0 6px rgba(255,255,255,.25)}
+.typing .spin i:nth-child(2){top:10px;right:0;background:#ffffff;box-shadow:0 0 6px rgba(255,255,255,.7)}
+.typing .spin i:nth-child(3){bottom:0;left:10px;background:#9ca3af;box-shadow:0 0 6px rgba(156,163,175,.7)}
 @keyframes orbitSpin{to{transform:rotate(360deg)}}
 .typing em{font-style:normal;font-size:13px;letter-spacing:.2px;color:var(--ink-dim);
   background:linear-gradient(100deg,var(--ink-dim) 35%,rgba(255,255,255,.95) 50%,var(--ink-dim) 65%);
