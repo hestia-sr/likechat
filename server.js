@@ -62,11 +62,11 @@ function parseModelEnv(i) {
   return entry;
 }
 const FALLBACK_MODELS = [
-  { label: 'Otomatis', id: 'glm-5.3-flash' },
-  { label: 'Sedang', id: 'space-bunny-free' },
-  { label: 'Codex', id: 'DeepSeek-V4-Pro' },
-  { label: 'Pintar', id: 'kimi-k3' },
-  { label: 'Akurat', id: 'step-5-preview' },
+  { label: 'LikeChat Flash', id: 'glm-5.3-flash' },
+  { label: 'LikeChat Swift', id: 'space-bunny-free' },
+  { label: 'LikeChat Codex', id: 'DeepSeek-V4-Pro' },
+  { label: 'LikeChat Smart', id: 'kimi-k3' },
+  { label: 'LikeChat Prime', id: 'step-5-preview' },
 ];
 const TEXT_MODELS = [1, 2, 3, 4, 5, 6, 7, 8].map(parseModelEnv).filter(Boolean);
 if (TEXT_MODELS.length === 0) TEXT_MODELS.push(...FALLBACK_MODELS);
