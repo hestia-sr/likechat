@@ -1,0 +1,5 @@
+# LikeChat - jangan commit file sensitif
+.env
+node_modules/
+*.zip
+.DS_Store

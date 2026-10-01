@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>LikeChat</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="assets/logo.jpg">
+</head>
+<body>
+<!-- Wallpaper latar -->
+<div id="wallpaper" aria-hidden="true">
+  <img id="wpImg" alt="">
+  <video id="wpVideo" muted loop playsinline></video>
+</div>
+
+<div id="app">
+  <!-- Kepala: tanpa garis, melayang -->
+  <header id="topbar">
+    <button id="menuBtn" class="icon-btn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>
+    </button>
+    <button id="modelBtn" class="model-btn" aria-label="Pilih model AI">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>
+    </button>
+    <button id="moreBtn" class="icon-btn" aria-label="Pengaturan">
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+    </button>
+    <div id="modelMenu" class="dropdown hidden" role="menu"></div>
+  </header>
+
+  <!-- Area chat -->
+  <main id="chat" aria-live="polite">
+    <div id="emptyState">
+      <img src="assets/logo.jpg" alt="LikeChat" class="logo-big">
+      <div class="app-title">LikeChat</div>
+    </div>
+    <div id="messages"></div>
+  </main>
+
+  <!-- Penulis pesan -->
+  <div id="composer">
+    <button id="plusBtn" class="circle-btn" aria-label="Tambah">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <div id="plusMenu" class="hidden" role="menu">
+      <button class="plus-item" data-plus="gallery" aria-label="Galeri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg><span>Galeri</span></button>
+      <button class="plus-item" data-plus="camera" aria-label="Kamera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Kamera</span></button>
+      <button class="plus-item" data-plus="file" aria-label="File"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span>File</span></button>
+      <button class="plus-item" data-plus="generate" aria-label="Buat Gambar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg><span>Buat Gambar</span></button>
+      <button class="plus-item" data-plus="edit" aria-label="Edit Gambar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Edit Gambar</span></button>
+    </div>
+    <div id="inputPill">
+      <div id="modeChip" class="hidden"><span id="modeChipText"></span><button id="modeChipX" class="mini-btn" aria-label="Batal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div id="attachBar" class="hidden"><img id="attachImg" alt=""><span id="attachName"></span><button id="attachX" class="mini-btn" aria-label="Hapus lampiran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <textarea id="input" rows="1" placeholder="Tulis pesan..."></textarea>
+    </div>
+    <button id="sendBtn" class="circle-btn" aria-label="Kirim">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+    </button>
+  </div>
+
+  <input type="file" id="fileGallery" accept="image/*" hidden>
+  <input type="file" id="fileCamera" accept="image/*" capture="environment" hidden>
+  <input type="file" id="fileAny" hidden>
+  <input type="file" id="fileEditImg" accept="image/*" hidden>
+  <input type="file" id="fileWallpaper" accept="image/*,video/*" hidden>
+</div>
+
+<!-- Lapisan gelap -->
+<div id="scrim" class="hidden"></div>
+
+<!-- Drawer kiri -->
+<aside id="drawer" aria-label="Menu utama">
+  <div class="drawer-head">
+    <img src="assets/logo.jpg" alt="" class="logo-small">
+    <span class="drawer-title">LikeChat</span>
+  </div>
+  <nav class="drawer-nav">
+    <button class="drawer-item" data-act="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Pesan Baru</span></button>
+    <button class="drawer-item" data-act="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Cari Pesan</span></button>
+    <div id="searchBox" class="hidden"><input id="searchInput" type="search" placeholder="Cari pesan..."></div>
+    <button class="drawer-item" data-act="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span>Riwayat Pesan</span></button>
+    <div id="historyList" class="hidden"></div>
+    <button class="drawer-item" data-act="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span>Hapus Riwayat</span></button>
+    <button class="drawer-item" data-act="info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg><span>Info</span></button>
+  </nav>
+</aside>
+
+<!-- Panel info -->
+<aside id="infoPanel" aria-label="Info">
+  <button class="icon-btn panel-x" data-close="infoPanel" aria-label="Tutup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  <img src="assets/logo.jpg" alt="" class="logo-small">
+  <p>Web app ini langsung di ciptakan oleh <b>Hestia Sri Rose</b> Dari <b>Keluarga Besar SR Produksi</b>. Jika anda menemukan Bug atau Error Hubungi Kami Melalui email di bawah ini</p>
+  <a href="mailto:hestia.sri.rosee@gmail.com">hestia.sri.rosee@gmail.com</a>
+</aside>
+
+<!-- Sidebar pengaturan -->
+<aside id="settings" aria-label="Pengaturan">
+  <button class="icon-btn panel-x" data-close="settings" aria-label="Tutup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  <h3>Wallpaper</h3>
+  <div id="wpCats"></div>
+  <button id="wpUploadBtn" class="wide-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg></button>
+  <h3>Warna Tombol</h3>
+  <div id="colorRow"></div>
+</aside>
+
+<!-- Penampil kode -->
+<aside id="codePanel" aria-label="Lihat kode">
+  <div class="code-head">
+    <span id="codeLang">code</span>
+    <div class="code-actions">
+      <button class="icon-btn" id="codeClose" aria-label="Keluar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      <button class="icon-btn" id="codeCopy" aria-label="Salin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+      <button class="icon-btn" id="codeRetry" aria-label="Ulang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10"/><path d="M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg></button>
+      <button class="icon-btn" id="codeDelete" aria-label="Hapus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+    </div>
+  </div>
+  <pre id="codeBody"><code></code></pre>
+</aside>
+
+<!-- Penampil gambar -->
+<div id="imgViewer" class="hidden" aria-label="Lihat gambar">
+  <img id="imgViewerImg" alt="Gambar">
+  <div class="img-viewer-actions">
+    <button class="icon-btn" id="imgViewerClose" aria-label="Tutup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <button class="icon-btn" id="imgViewerDownload" aria-label="Unduh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></button>
+    <button class="icon-btn" id="imgViewerDelete" aria-label="Hapus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+  </div>
+</div>
+
+<!-- Popup aksi pesan -->
+<div id="msgPopup" class="hidden" role="menu">
+  <button class="icon-btn" id="msgCopy" aria-label="Salin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+  <button class="icon-btn" id="msgRetry" aria-label="Ulang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10"/><path d="M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg></button>
+  <button class="icon-btn" id="msgDelete" aria-label="Hapus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
