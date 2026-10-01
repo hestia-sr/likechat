@@ -513,6 +513,12 @@ function applyColor(){
   r.setProperty('--btn', c);
   r.setProperty('--btn-fg', DARK_FG.includes(SET.color) ? '#1a1a1a' : '#ffffff');
 }
+function applyMode(){
+  if(!SET.mode) SET.mode = 'gelap';
+  document.body.classList.toggle('light', SET.mode === 'terang');
+  document.querySelectorAll('#modeRow button').forEach(b =>
+    b.classList.toggle('on', b.dataset.mode === SET.mode));
+}
 function buildColors(){
   const row = $('#colorRow');
   row.innerHTML = '';
@@ -812,7 +818,10 @@ function bindEvents(){
 async function init(){
   try{ const r = await fetch('/api/config'); const j = await r.json(); if(j.models && j.models.length) CFG = j; }catch(e){}
   if(SET.model >= CFG.models.length) SET.model = 0;
-  buildModelMenu(); applyColor(); buildColors(); applyWallpaper();
+  buildModelMenu(); applyColor(); buildColors(); applyWallpaper(); applyMode();
+  document.querySelectorAll('#modeRow button').forEach(b => b.onclick = () => {
+    SET.mode = b.dataset.mode; save('lc_set', SET); applyMode();
+  });
   try{ const r = await fetch('/api/wallpapers'); WALLS = await r.json(); }catch(e){ WALLS = { categories:[] }; }
   buildWallpapers();
   bindEvents();
