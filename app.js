@@ -79,6 +79,73 @@ function md(src){
   return h;
 }
 
+/* ---------- ZIP mini: bikin file .zip tanpa library ---------- */
+const _crcT = (() => {
+  const t = new Uint32Array(256);
+  for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1); t[n]=c>>>0; }
+  return t;
+})();
+function _crc32(b){ let c=0xFFFFFFFF; for(let i=0;i<b.length;i++) c = _crcT[(c^b[i])&255] ^ (c>>>8); return (c^0xFFFFFFFF)>>>0; }
+const _te = new TextEncoder();
+function makeZip(files){ // files: [{name, content}] -> Blob .zip (tanpa kompresi)
+  const parts=[], central=[];
+  let offset=0;
+  for(const f of files){
+    const nb=_te.encode(f.name), db=_te.encode(f.content), crc=_crc32(db);
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x800,true);
+    lh.setUint16(8,0,true);
+    lh.setUint32(14,crc,true); lh.setUint32(18,db.length,true); lh.setUint32(22,db.length,true);
+    lh.setUint16(26,nb.length,true);
+    parts.push(lh.buffer, nb, db);
+    const ch=new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true);
+    ch.setUint16(8,0x800,true); ch.setUint16(10,0,true);
+    ch.setUint32(16,crc,true); ch.setUint32(20,db.length,true); ch.setUint32(24,db.length,true);
+    ch.setUint16(28,nb.length,true); ch.setUint32(42,offset,true);
+    central.push(ch.buffer, nb);
+    offset += 30 + nb.length + db.length;
+  }
+  const csize=central.reduce((s,p)=>s+p.byteLength,0);
+  const end=new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true);
+  end.setUint16(8,files.length,true); end.setUint16(10,files.length,true);
+  end.setUint32(12,csize,true); end.setUint32(16,offset,true);
+  return new Blob([...parts, ...central, end.buffer], {type:'application/zip'});
+}
+const ZIP_NAMES={js:'script.js',javascript:'script.js',ts:'script.ts',jsx:'script.jsx',tsx:'script.tsx',
+  py:'script.py',python:'script.py',java:'Main.java',c:'main.c',cpp:'main.cpp','c++':'main.cpp',
+  cs:'script.cs',php:'script.php',rb:'script.rb',ruby:'script.rb',go:'main.go',rs:'main.rs',
+  kt:'Main.kt',kotlin:'Main.kt',sh:'script.sh',bash:'script.sh',sql:'script.sql',
+  html:'index.html',htm:'index.html',css:'style.css',json:'data.json',xml:'data.xml',
+  yaml:'config.yaml',yml:'config.yaml',md:'readme.md',markdown:'readme.md',
+  txt:'file.txt',text:'file.txt',csv:'data.csv',log:'app.log',ini:'config.ini',cfg:'config.ini',env:'config.env'};
+function zipNameFor(lang, used){
+  let name = ZIP_NAMES[lang] || 'file.txt';
+  if(!used.has(name)){ used.add(name); return name; }
+  const dot = name.lastIndexOf('.'), base = name.slice(0,dot), ext = name.slice(dot);
+  let k=2;
+  while(used.has(base+'-'+k+ext)) k++;
+  name = base+'-'+k+ext; used.add(name);
+  return name;
+}
+function downloadCodeZip(blocks){
+  const used=new Set();
+  const files=blocks.map(b => ({ name:zipNameFor(b.lang, used), content:b.code }));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(makeZip(files));
+  a.download='kode.zip';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 5000);
+}
+function zipCardEl(blocks){
+  const el=document.createElement('div');
+  el.className='zip-card';
+  el._blocks=blocks;
+  el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg><span>kode.zip</span><em>'+blocks.length+' file</em>';
+  return el;
+}
+
 /* ---------- Render pesan ---------- */
 function statusText(m){
   const snip = s => { s = String(s||'').replace(/\s+/g,' ').trim(); return s.length > 42 ? s.slice(0,42)+'…' : s; };
@@ -121,6 +188,7 @@ function renderMsg(m, idx){
     if(!inner) inner = typingHtml(m);
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
+    if(d._blocks.length) d.appendChild(zipCardEl(d._blocks));
   }
   return d;
 }
@@ -138,6 +206,7 @@ function updateAiMsg(div, m){
   else if(!m.gen) inner += typingHtml(m);
   div.innerHTML = inner;
   div._blocks = _blocks.slice();
+  if(div._blocks.length) div.appendChild(zipCardEl(div._blocks));
 }
 
 /* ---------- Chat: simpan & riwayat ---------- */
@@ -575,6 +644,12 @@ function bindEvents(){
   }, { passive:true });
 
   msgsEl.addEventListener('click', e => {
+    const zc = e.target.closest('.zip-card');
+    if(zc){
+      const blocks = zc._blocks || (zc.closest('.msg')||{})._blocks || [];
+      if(blocks.length) downloadCodeZip(blocks);
+      return;
+    }
     const box = e.target.closest('.codebox');
     if(box){
       const msgEl = box.closest('.msg');
