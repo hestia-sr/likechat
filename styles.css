@@ -5,6 +5,23 @@
   --glass:rgba(20,22,28,.55); --glass2:rgba(255,255,255,.13);
   --radius:18px;
 }
+
+/* ---------- Mode terang ---------- */
+body.light{--ink:#1b1f27;--ink-dim:rgba(27,31,39,.66);
+  --glass:rgba(255,255,255,.66);--glass2:rgba(27,31,39,.08);
+  background:#e9edf3}
+body.light #wallpaper{background:linear-gradient(160deg,#dde4ef,#f5f7fb)}
+body.light #topbar{background:rgba(255,255,255,.42)}
+body.light .app-title{text-shadow:0 2px 12px rgba(255,255,255,.7)}
+body.light .msg.ai{text-shadow:0 1px 8px rgba(255,255,255,.75)}
+body.light .msg.ai a,body.light #infoPanel a{color:#0b5ed7}
+body.light .msg.ai code{background:rgba(27,31,39,.12)}
+body.light .msg.user .file-card{background:rgba(255,255,255,.55);border-color:rgba(27,31,39,.14)}
+body.light .msg.ai .zip-card{background:rgba(255,255,255,.55);border-color:rgba(27,31,39,.14)}
+body.light .drawer-item,body.light .hist-item{background:rgba(27,31,39,.06)}
+body.light #searchBox input{background:rgba(27,31,39,.08)}
+body.light .wp-thumb{background:rgba(27,31,39,.07)}
+body.light .typing .spin i:nth-child(2){background:#6b7280;box-shadow:0 0 6px rgba(107,114,128,.55)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
@@ -180,6 +197,11 @@ aside{position:fixed;top:0;bottom:0;z-index:50;background:rgba(17,20,26,.92);bac
 .wp-thumb.on{border-color:var(--btn)}
 .wp-thumb img,.wp-thumb video{width:100%;height:100%;object-fit:cover;pointer-events:none}
 #colorRow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+#modeRow{display:flex;background:var(--glass2);border-radius:999px;padding:4px;gap:4px}
+#modeRow button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 0;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--ink-dim)}
+#modeRow button svg{width:18px;height:18px}
+#modeRow button.on{background:var(--btn);color:var(--btn-fg)}
 .swatch{aspect-ratio:1;border-radius:50%;border:3px solid transparent;position:relative}
 .swatch.on{border-color:#fff;box-shadow:0 0 0 2px var(--btn)}
 
