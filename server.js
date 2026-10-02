@@ -130,18 +130,41 @@ app.use((req, res, next) => {
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
-const Database = require('better-sqlite3');
 
 const GOOGLE_CLIENT_ID = (process.env.GOOGLE_CLIENT_ID || '').trim();
 const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
 const GOOGLE_CALLBACK_URL = (process.env.GOOGLE_CALLBACK_URL || 'https://www.likechat.work.gd/auth/google/callback').trim();
 const SESSION_SECRET = (process.env.SESSION_SECRET || 'likechat-dev-secret-ganti-di-env').trim();
 
-// Database user — file lokal di .data (TIDAK disajikan via HTTP)
+// Database user — file JSON lokal di .data (TIDAK disajikan via HTTP).
+// Sengaja tanpa modul native (mis. better-sqlite3) agar tidak segfault di Railway.
 const DATA_DIR = path.join(__dirname, '.data');
 try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch(e){}
-const db = new Database(path.join(DATA_DIR, 'likechat.db'));
-db.exec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, google_id TEXT UNIQUE, email TEXT, name TEXT, picture TEXT, created_at TEXT DEFAULT (datetime('now')))");
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+function loadUsers(){
+  try {
+    const j = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    return Array.isArray(j) ? j : [];
+  } catch(e){ return []; }
+}
+function saveUsers(list){
+  const tmp = USERS_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(list));
+  fs.renameSync(tmp, USERS_FILE);
+}
+let users = loadUsers();
+let nextUserId = users.reduce((m, u) => Math.max(m, u.id || 0), 0) + 1;
+const findUserById = (id) => users.find(u => u.id === id) || null;
+const findUserByGoogleId = (gid) => users.find(u => u.google_id === gid) || null;
+function upsertUser(gid, email, name, picture){
+  let u = findUserByGoogleId(gid);
+  if (!u) {
+    u = { id: nextUserId++, google_id: gid, email, name, picture, created_at: new Date().toISOString() };
+    users.push(u);
+  } else { u.email = email; u.name = name; u.picture = picture; }
+  saveUsers(users);
+  return { id: u.id, google_id: u.google_id, email: u.email, name: u.name, picture: u.picture };
+}
 app.use('/.data', (req, res) => res.status(404).end());
 
 app.use(session({
@@ -155,10 +178,8 @@ app.use(passport.session());
 
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser((id, done) => {
-  try {
-    const u = db.prepare('SELECT id, google_id, email, name, picture FROM users WHERE id = ?').get(id);
-    done(null, u || null);
-  } catch(e){ done(e); }
+  try { done(null, findUserById(id)); }
+  catch(e){ done(e); }
 });
 
 const GOOGLE_ON = !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET);
@@ -173,15 +194,7 @@ if (GOOGLE_ON) {
       const email = (profile.emails && profile.emails[0] && profile.emails[0].value) || '';
       const name = profile.displayName || email || 'Pengguna';
       const picture = (profile.photos && profile.photos[0] && profile.photos[0].value) || '';
-      let u = db.prepare('SELECT id, google_id, email, name, picture FROM users WHERE google_id = ?').get(gid);
-      if (!u) {
-        const r = db.prepare('INSERT INTO users (google_id, email, name, picture) VALUES (?, ?, ?, ?)').run(gid, email, name, picture);
-        u = { id: r.lastInsertRowid, google_id: gid, email, name, picture };
-      } else if (u.name !== name || u.picture !== picture || u.email !== email) {
-        db.prepare('UPDATE users SET name = ?, picture = ?, email = ? WHERE id = ?').run(name, picture, email, u.id);
-        u = Object.assign({}, u, { name, picture, email });
-      }
-      done(null, u);
+      done(null, upsertUser(gid, email, name, picture));
     } catch(e){ done(e); }
   }));
   console.log('Login Google AKTIF');
