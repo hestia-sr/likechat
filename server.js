@@ -125,6 +125,90 @@ app.use((req, res, next) => {
   if (BLOCKED_FILES.has(path.basename(req.path))) return res.status(403).end();
   next();
 });
+
+// ---------- Login Gmail (Google OAuth) ----------
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const session = require('express-session');
+const Database = require('better-sqlite3');
+
+const GOOGLE_CLIENT_ID = (process.env.GOOGLE_CLIENT_ID || '').trim();
+const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+const GOOGLE_CALLBACK_URL = (process.env.GOOGLE_CALLBACK_URL || 'https://www.likechat.work.gd/auth/google/callback').trim();
+const SESSION_SECRET = (process.env.SESSION_SECRET || 'likechat-dev-secret-ganti-di-env').trim();
+
+// Database user — file lokal di .data (TIDAK disajikan via HTTP)
+const DATA_DIR = path.join(__dirname, '.data');
+try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch(e){}
+const db = new Database(path.join(DATA_DIR, 'likechat.db'));
+db.exec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, google_id TEXT UNIQUE, email TEXT, name TEXT, picture TEXT, created_at TEXT DEFAULT (datetime('now')))");
+app.use('/.data', (req, res) => res.status(404).end());
+
+app.use(session({
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 30 * 24 * 3600 * 1000, httpOnly: true, sameSite: 'lax' }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser((id, done) => {
+  try {
+    const u = db.prepare('SELECT id, google_id, email, name, picture FROM users WHERE id = ?').get(id);
+    done(null, u || null);
+  } catch(e){ done(e); }
+});
+
+const GOOGLE_ON = !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET);
+if (GOOGLE_ON) {
+  passport.use(new GoogleStrategy({
+    clientID: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    callbackURL: GOOGLE_CALLBACK_URL
+  }, (accessToken, refreshToken, profile, done) => {
+    try {
+      const gid = profile.id;
+      const email = (profile.emails && profile.emails[0] && profile.emails[0].value) || '';
+      const name = profile.displayName || email || 'Pengguna';
+      const picture = (profile.photos && profile.photos[0] && profile.photos[0].value) || '';
+      let u = db.prepare('SELECT id, google_id, email, name, picture FROM users WHERE google_id = ?').get(gid);
+      if (!u) {
+        const r = db.prepare('INSERT INTO users (google_id, email, name, picture) VALUES (?, ?, ?, ?)').run(gid, email, name, picture);
+        u = { id: r.lastInsertRowid, google_id: gid, email, name, picture };
+      } else if (u.name !== name || u.picture !== picture || u.email !== email) {
+        db.prepare('UPDATE users SET name = ?, picture = ?, email = ? WHERE id = ?').run(name, picture, email, u.id);
+        u = Object.assign({}, u, { name, picture, email });
+      }
+      done(null, u);
+    } catch(e){ done(e); }
+  }));
+  console.log('Login Google AKTIF');
+} else {
+  console.log('Login Google MATI (GOOGLE_CLIENT_ID/SECRET belum diisi)');
+}
+
+app.get('/auth/google', (req, res, next) => {
+  if (!GOOGLE_ON) return res.status(503).send('Login Google belum dikonfigurasi.');
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
+app.get('/auth/google/callback',
+  (req, res, next) => {
+    if (!GOOGLE_ON) return res.status(503).send('Login Google belum dikonfigurasi.');
+    next();
+  },
+  passport.authenticate('google', { failureRedirect: '/?login=gagal' }),
+  (req, res) => res.redirect('/')
+);
+app.get('/auth/logout', (req, res) => {
+  req.logout(function(){ res.redirect('/'); });
+});
+app.get('/api/me', (req, res) => {
+  if (req.user) return res.json({ user: { name: req.user.name, email: req.user.email, picture: req.user.picture } });
+  res.json({ user: null, google_on: GOOGLE_ON });
+});
+
 app.use(express.static(__dirname, { dotfiles: 'deny', index: 'index.html' }));
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
