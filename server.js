@@ -222,6 +222,42 @@ app.get('/api/me', (req, res) => {
   res.json({ user: null, google_on: GOOGLE_ON });
 });
 
+app.get('/privacy', (req, res) => {
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kebijakan Privasi — LikeChat</title>
+<style>
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;max-width:640px;margin:0 auto;padding:32px 20px;color:#222;line-height:1.7;background:#fafafa}
+h1{font-size:24px;margin-bottom:8px}
+h2{font-size:17px;margin-top:28px}
+p,li{font-size:15px}
+ul{padding-left:22px}
+.meta{color:#888;font-size:13px}
+</style>
+</head>
+<body>
+<h1>Kebijakan Privasi LikeChat</h1>
+<p class="meta">Terakhir diperbarui: 2 Oktober 2026</p>
+<h2>Data yang kami kumpulkan</h2>
+<p>Jika Anda masuk dengan Google, kami menerima dan menyimpan:</p>
+<ul>
+<li>Nama tampilan</li>
+<li>Alamat email</li>
+<li>Foto profil</li>
+</ul>
+<h2>Cara data digunakan</h2>
+<p>Data tersebut hanya dipakai untuk mengenali sesi login Anda di LikeChat. Kami tidak membagikan, menjual, atau meneruskan data Anda ke pihak ketiga mana pun.</p>
+<h2>Penyimpanan data</h2>
+<p>Data login tersimpan di server LikeChat dan dihapus sepenuhnya saat Anda keluar (logout). Riwayat percakapan tersimpan di perangkat Anda sendiri.</p>
+<h2>Kontak</h2>
+<p>Jika ada pertanyaan tentang privasi, hubungi: hestia.sri.rosee@gmail.com</p>
+</body>
+</html>`);
+});
+
 app.use(express.static(__dirname, { dotfiles: 'deny', index: 'index.html' }));
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
