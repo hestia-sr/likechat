@@ -187,6 +187,21 @@ aside{position:fixed;top:0;bottom:0;z-index:50;background:rgba(17,20,26,.92);bac
 #infoPanel a{color:#a8d4ff;font-size:14px;overflow-wrap:anywhere}
 .panel-x{align-self:flex-end}
 
+#accountPanel{left:0;width:min(70vw,290px);transform:translateX(-105%);border-right:1px solid rgba(255,255,255,.08);overflow-y:auto}
+#accountPanel.open{transform:none}
+.acc-profile{display:flex;flex-direction:column;align-items:center;padding:14px 12px 12px}
+.acc-photo{width:84px;height:84px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.08)}
+.acc-photo.hidden{display:none}
+.acc-name{font-size:16px;font-weight:700;margin-top:10px;color:var(--ink);text-align:center}
+.acc-email{font-size:12px;color:var(--ink-dim);margin-top:3px;overflow-wrap:anywhere;text-align:center}
+#accountPanel .drawer-nav{margin-top:6px}
+.acc-list{padding:10px 2px 8px;display:flex;flex-direction:column;gap:8px}
+.acc-empty{font-size:13px;color:var(--ink-dim);text-align:center;padding:14px 8px}
+.acc-file{text-align:left;padding:10px 12px;border-radius:10px;font-size:13.5px;color:var(--ink);background:rgba(255,255,255,.05);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc-file small{display:block;font-size:11px;color:var(--ink-dim);margin-top:2px}
+.acc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.acc-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:rgba(255,255,255,.06)}
+
 #settings{right:0;width:min(50vw,300px);transform:translateX(105%);border-left:1px solid rgba(255,255,255,.08);overflow-y:auto;
   background:var(--glass);backdrop-filter:blur(14px)}
 #settings.open{transform:none}
