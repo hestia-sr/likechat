@@ -218,7 +218,7 @@ app.get('/auth/logout', (req, res) => {
   req.logout(function(){ res.redirect('/'); });
 });
 app.get('/api/me', (req, res) => {
-  if (req.user) return res.json({ user: { name: req.user.name, email: req.user.email, picture: req.user.picture } });
+  if (req.user) return res.json({ user: { name: req.user.name, email: req.user.email, picture: req.user.picture }, google_on: GOOGLE_ON });
   res.json({ user: null, google_on: GOOGLE_ON });
 });
 
