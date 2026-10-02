@@ -68,7 +68,7 @@ button svg{display:block;width:22px;height:22px}
 .dropdown button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:10px;
   font-size:14px;color:var(--ink);user-select:none;-webkit-user-select:none}
 .dropdown button:active{background:rgba(255,255,255,.12)}
-.dropdown button .tick{margin-left:auto;width:18px;height:18px;visibility:hidden;color:var(--btn-fg)}
+.dropdown button .tick{margin-left:auto;width:18px;height:18px;visibility:hidden;color:var(--ink)}
 .dropdown button.on .tick{visibility:visible}
 
 /* ---------- Chat ---------- */
