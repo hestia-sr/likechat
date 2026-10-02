@@ -194,7 +194,7 @@ app.use((req, res, next) => {
 // ---------- Login Gmail (Google OAuth) ----------
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 
 const GOOGLE_CLIENT_ID = (process.env.GOOGLE_CLIENT_ID || '').trim();
 const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
@@ -232,11 +232,14 @@ function upsertUser(gid, email, name, picture){
 }
 app.use('/.data', (req, res) => res.status(404).end());
 
-app.use(session({
-  secret: SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 30 * 24 * 3600 * 1000, httpOnly: true, sameSite: 'lax' }
+// Sesi disimpan di cookie yang ditandatangani (tahan restart/redeploy server),
+// bukan di memori server — jadi login tidak hilang saat server di-restart.
+app.use(cookieSession({
+  name: 'lc_session',
+  keys: [SESSION_SECRET],
+  maxAge: 30 * 24 * 3600 * 1000,
+  httpOnly: true,
+  sameSite: 'lax'
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -280,7 +283,7 @@ app.get('/auth/google/callback',
   (req, res) => res.redirect('/')
 );
 app.get('/auth/logout', (req, res) => {
-  req.logout(function(){ res.redirect('/'); });
+  req.logout(function(){ req.session = null; res.redirect('/'); });
 });
 app.get('/api/me', (req, res) => {
   if (req.user) return res.json({ user: { name: req.user.name, email: req.user.email, picture: req.user.picture }, google_on: GOOGLE_ON });
