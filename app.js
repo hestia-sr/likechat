@@ -436,22 +436,29 @@ function clearComposer(){
   $('#attachBar').classList.add('hidden');
   $('#modeChip').classList.add('hidden');
 }
+function fitPill(){
+  const tall = inputEl.scrollHeight > 32 || !$('#modeChip').classList.contains('hidden') || !$('#attachBar').classList.contains('hidden');
+  $('#inputPill').classList.toggle('tall', tall);
+}
 function autogrow(){
   inputEl.style.height = 'auto';
   inputEl.style.height = Math.min(inputEl.scrollHeight, 150) + 'px';
-  $('#inputPill').classList.toggle('tall', inputEl.scrollHeight > 32);
+  fitPill();
 }
 function setAttachPreview(){
   const bar = $('#attachBar');
-  if(attach && attach.kind === 'image'){ $('#attachImg').src = attach.dataUrl; $('#attachName').textContent = attach.name; bar.classList.remove('hidden'); }
-  else if(attach){ $('#attachImg').src = ''; $('#attachName').textContent = attach.name; bar.classList.remove('hidden'); }
+  const img = $('#attachImg');
+  if(attach && attach.kind === 'image'){ img.src = attach.dataUrl; img.style.display = ''; $('#attachName').textContent = attach.name; bar.classList.remove('hidden'); }
+  else if(attach){ img.removeAttribute('src'); img.style.display = 'none'; $('#attachName').textContent = attach.name; bar.classList.remove('hidden'); }
   else bar.classList.add('hidden');
+  fitPill();
 }
 function setModeChip(){
   const chip = $('#modeChip');
   if(imgMode === 'generate'){ $('#modeChipText').textContent = 'Buat Gambar'; chip.classList.remove('hidden'); }
   else if(imgMode === 'edit'){ $('#modeChipText').textContent = 'Edit Gambar'; chip.classList.remove('hidden'); }
   else chip.classList.add('hidden');
+  fitPill();
 }
 
 /* ---------- Panel & scrim ---------- */
