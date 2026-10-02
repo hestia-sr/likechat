@@ -465,10 +465,17 @@ async function tryKeys(keys, fn) {
   throw last;
 }
 
+function cleanUpstreamText(text) {
+  // Penyedia kadang mengembalikan halaman error HTML (mis. 502 gateway);
+  // jangan tampilkan mentah ke pengguna.
+  const t = (text || '').slice(0, 500);
+  if (/^\s*</.test(t)) return 'penyedia sedang bermasalah (halaman error, bukan JSON)';
+  return t;
+}
 function upstreamError(status, text) {
   const err = new Error('Upstream error ' + status);
   err.status = status;
-  err.error = text && text.slice(0, 500);
+  err.error = cleanUpstreamText(text);
   err.retriable = isRetriable(status, text);
   return err;
 }
@@ -700,7 +707,7 @@ function deapiOrigin() {
 function deapiError(status, text) {
   let msg = '';
   try { const j = JSON.parse(text); msg = j.message || ''; } catch (e) {}
-  return upstreamError(status, msg || text);
+  return upstreamError(status, msg || cleanUpstreamText(text));
 }
 async function pollDeapiJob(key, requestId) {
   const url = deapiOrigin() + '/api/v2/jobs/' + encodeURIComponent(requestId);
