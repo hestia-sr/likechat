@@ -105,6 +105,19 @@ function parseFileModel(){
 }
 const FILE_MODEL_ENTRY = parseFileModel();
 
+// ---------- Filter kata kasar ----------
+// Daftar kata dipisah koma, bisa diganti lewat .env: BLOCKED_WORDS=itil,silit,memek,...
+const BLOCKED_WORDS = (process.env.BLOCKED_WORDS || 'itil,silit,memek').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+function findBlockedWord(text){
+  if (!text || !BLOCKED_WORDS.length) return null;
+  for (const w of BLOCKED_WORDS) {
+    const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Izinkan imbuhan umum Indonesia di belakang kata: -mu, -nya, -ku, -lah, -kah, -pun
+    if (new RegExp('(^|[^a-z])' + esc + '(mu|nya|ku|lah|kah|pun)?([^a-z]|$)', 'i').test(text)) return w;
+  }
+  return null;
+}
+
 // ---------- Batasan akses tamu (belum login Google) ----------
 // Tamu hanya boleh memakai 1 model chat dan tidak bisa buat/edit gambar.
 // Berlaku hanya bila login Google aktif (GOOGLE_ON); kalau tidak, bebas.
@@ -525,6 +538,12 @@ app.post('/api/chat', async (req, res) => {
   const useModel = fileModel || model || TEXT_MODELS[0].id;
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages kosong' });
+  }
+  // Tolak pesan yang mengandung kata kasar
+  {
+    const lastUser = [...messages].reverse().find(m => m && m.role === 'user' && typeof m.content === 'string');
+    const bad = lastUser && findBlockedWord(lastUser.content);
+    if (bad) return res.status(403).json({ error: 'Pesan mengandung kata yang tidak pantas. Yuk pakai bahasa yang lebih sopan.' });
   }
   // Model pembaca file juga boleh dipakai (selain daftar model chat)
   const allowedIds = modelsFor(req).map(m => m.id);
