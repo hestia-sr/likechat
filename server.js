@@ -73,6 +73,25 @@ const FALLBACK_MODELS = [
 const TEXT_MODELS = [1, 2, 3, 4, 5, 6, 7, 8].map(parseModelEnv).filter(Boolean);
 if (TEXT_MODELS.length === 0) TEXT_MODELS.push(...FALLBACK_MODELS);
 
+// ---------- Batasan akses tamu (belum login Google) ----------
+// Tamu hanya boleh memakai 1 model chat dan tidak bisa buat/edit gambar.
+// Berlaku hanya bila login Google aktif (GOOGLE_ON); kalau tidak, bebas.
+const GUEST_MODEL_ENTRY = (() => {
+  const env = (process.env.GUEST_MODEL || '').trim();
+  if (env) {
+    const f = TEXT_MODELS.find(m => m.id === env || m.label === env);
+    if (f) return f;
+  }
+  return TEXT_MODELS.find(m => m.label === 'sr.0.1-turtle') || TEXT_MODELS[0];
+})();
+function modelsFor(req) {
+  if (!GOOGLE_ON || req.user) return TEXT_MODELS;
+  return [GUEST_MODEL_ENTRY];
+}
+function guestBlocked(req) {
+  return GOOGLE_ON && !req.user;
+}
+
 // ---------- Skema baru: konfigurasi dikelompokkan per provider ----------
 //   baseurl_<provider>    : base URL provider (opsional; hcnsec punya bawaan)
 //   apikey_<provider>_<n> : API key ke-n (1..9), failover berurutan
@@ -394,7 +413,7 @@ function upstreamError(status, text) {
 // ---------- Config untuk frontend ----------
 app.get('/api/config', (req, res) => {
   res.json({
-    models: TEXT_MODELS,
+    models: modelsFor(req),
     image: { model: IMAGE_MODEL, label: IMAGE_MODEL_LABEL, width: IMAGE_WIDTH, height: IMAGE_HEIGHT, steps: IMAGE_STEPS },
     hasTextKeys: TEXT_KEYS.length,
     hasImageKeys: IMAGE_KEYS.length,
@@ -470,6 +489,9 @@ app.post('/api/chat', async (req, res) => {
   const useModel = fileModel || model || TEXT_MODELS[0].id;
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages kosong' });
+  }
+  if (guestBlocked(req) && !modelsFor(req).some(m => m.id === useModel)) {
+    return res.status(403).json({ error: 'Login dengan Google untuk memakai semua model.' });
   }
   // Pencarian web otomatis: selipkan hasil internet ke pesan terakhir pengguna
   let outMessages = messages;
@@ -641,6 +663,7 @@ async function submitDeapiJob(key, url, body, isForm) {
 
 // ---------- Buat gambar (text2img) ----------
 app.post('/api/image/generate', async (req, res) => {
+  if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk membuat gambar.' });
   const { prompt } = req.body || {};
   if (!prompt || !String(prompt).trim()) return res.status(400).json({ error: 'prompt kosong' });
   try {
@@ -657,6 +680,7 @@ app.post('/api/image/generate', async (req, res) => {
 
 // ---------- Edit gambar (img2img) ----------
 app.post('/api/image/edit', upload.single('image'), async (req, res) => {
+  if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk mengedit gambar.' });
   const prompt = req.body && req.body.prompt;
   if (!req.file) return res.status(400).json({ error: 'gambar tidak ada' });
   if (!prompt || !String(prompt).trim()) return res.status(400).json({ error: 'prompt kosong' });
