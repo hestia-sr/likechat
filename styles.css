@@ -17,7 +17,7 @@ body.light .msg.ai{text-shadow:0 1px 8px rgba(255,255,255,.75)}
 body.light .msg.ai a,body.light #infoPanel a{color:#0b5ed7}
 body.light .msg.ai code{background:rgba(27,31,39,.12)}
 body.light .msg.user .file-card{background:rgba(255,255,255,.55);border-color:rgba(27,31,39,.14)}
-body.light .msg.ai .zip-card{background:rgba(255,255,255,.55);border-color:rgba(27,31,39,.14)}
+body.light .msg.ai .zip-link{color:#0b5ed7}
 body.light .drawer-item,body.light .hist-item{background:rgba(27,31,39,.06)}
 body.light #searchBox input{background:rgba(27,31,39,.08)}
 body.light .wp-thumb{background:rgba(27,31,39,.07)}
@@ -123,13 +123,10 @@ button svg{display:block;width:22px;height:22px}
 .codebox-head svg{width:16px;height:16px;color:var(--ink-dim)}
 .codebox-peek{padding:0 13px 10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
   color:var(--ink-dim);white-space:pre;overflow:hidden;text-overflow:ellipsis}
-.msg.ai .zip-card{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);
-  border-radius:14px;padding:10px 14px;margin:8px 0;max-width:82%;width:fit-content;cursor:pointer;
-  box-shadow:0 3px 10px rgba(0,0,0,.3);user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
-.msg.ai .zip-card:active{transform:scale(.98)}
-.msg.ai .zip-card svg{width:24px;height:24px;flex:none;opacity:.9}
-.msg.ai .zip-card span{font-size:14px;font-weight:600}
-.msg.ai .zip-card em{font-style:normal;font-size:12px;opacity:.55}
+.msg.ai .zip-link{display:inline-block;background:none;border:none;padding:0;margin:8px 0;
+  color:#7cc4ff;font-size:14px;font-weight:600;text-decoration:underline;cursor:pointer;text-align:left;
+  user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.msg.ai .zip-link:active{opacity:.7}
 
 /* ---------- Komposer ---------- */
 #composer{position:relative;z-index:5;display:flex;align-items:flex-end;gap:9px;
