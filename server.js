@@ -108,14 +108,15 @@ const FILE_MODEL_ENTRY = parseFileModel();
 // ---------- Filter kata kasar ----------
 // Daftar kata dipisah koma, bisa diganti lewat .env: BLOCKED_WORDS=itil,silit,memek,...
 const BLOCKED_WORDS = (process.env.BLOCKED_WORDS || 'itil,silit,memek').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
-function findBlockedWord(text){
-  if (!text || !BLOCKED_WORDS.length) return null;
+function censorBlockedWords(text){
+  if (!text || !BLOCKED_WORDS.length) return text;
+  let out = text;
   for (const w of BLOCKED_WORDS) {
     const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Izinkan imbuhan umum Indonesia di belakang kata: -mu, -nya, -ku, -lah, -kah, -pun
-    if (new RegExp('(^|[^a-z])' + esc + '(mu|nya|ku|lah|kah|pun)?([^a-z]|$)', 'i').test(text)) return w;
+    // Sensor kata + imbuhan umum (-mu, -nya, -ku, -lah, -kah, -pun) jadi ***
+    out = out.replace(new RegExp('(^|[^a-z])(' + esc + '(?:mu|nya|ku|lah|kah|pun)?)(?=[^a-z]|$)', 'gi'), '$1***');
   }
-  return null;
+  return out;
 }
 
 // ---------- Batasan akses tamu (belum login Google) ----------
@@ -539,11 +540,14 @@ app.post('/api/chat', async (req, res) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages kosong' });
   }
-  // Tolak pesan yang mengandung kata kasar
+  // Sensor kata kasar pada pesan teks terakhir pengguna (pesan tetap diproses)
+  let inMessages = messages;
   {
     const lastUser = [...messages].reverse().find(m => m && m.role === 'user' && typeof m.content === 'string');
-    const bad = lastUser && findBlockedWord(lastUser.content);
-    if (bad) return res.status(403).json({ error: 'Pesan mengandung kata yang tidak pantas. Yuk pakai bahasa yang lebih sopan.' });
+    if (lastUser) {
+      const censored = censorBlockedWords(lastUser.content);
+      if (censored !== lastUser.content) inMessages = messages.map(m => (m === lastUser ? { ...m, content: censored } : m));
+    }
   }
   // Model pembaca file juga boleh dipakai (selain daftar model chat)
   const allowedIds = modelsFor(req).map(m => m.id);
@@ -554,7 +558,7 @@ app.post('/api/chat', async (req, res) => {
     return res.status(403).json({ error: 'Login dengan Google untuk memakai semua model.' });
   }
   if (guestBlocked(req)) {
-    const hasAttachment = (messages || []).some(m => {
+    const hasAttachment = (inMessages || []).some(m => {
       if (!m || m.role !== 'user') return false;
       if (Array.isArray(m.content)) return m.content.some(p => p && p.type === 'image_url');
       return typeof m.content === 'string' && m.content.startsWith('[File: ');
@@ -562,7 +566,7 @@ app.post('/api/chat', async (req, res) => {
     if (hasAttachment) return res.status(403).json({ error: 'Login dengan Google untuk mengirim gambar/file.' });
   }
   // Pencarian web otomatis: selipkan hasil internet ke pesan terakhir pengguna
-  let outMessages = messages;
+  let outMessages = inMessages;
   if (WEB_SEARCH_ON) {
     const lastUser = [...messages].reverse().find(m => m && m.role === 'user' && typeof m.content === 'string');
     if (lastUser && needsWebSearch(lastUser.content)) {
