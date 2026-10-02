@@ -10,7 +10,7 @@ function load(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.par
 function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 
 let CFG = { models:[{label:'Otomatis',id:'glm-5.3-flash'}], image:{} };
-let SET = load('lc_set', { model:0, wallpaper:null, color:'biru' });
+let SET = load('lc_set', { model:null, wallpaper:null, color:'biru' });
 let CHATS = load('lc_chats', []);
 let cur = null;
 let streaming = false, aborter = null;
@@ -264,7 +264,7 @@ function schedulePaint(div, m){
 function maybeScroll(){ if(stick) chatEl.scrollTop = chatEl.scrollHeight; }
 
 async function chatAI(fileModel){
-  const modelId = (CFG.models[SET.model] || CFG.models[0]).id;
+  const modelId = (CFG.models.find(m => m.id===SET.model) || CFG.models[0]).id;
   const ai = { role:'ai', text:'' };
   cur.messages.push(ai);
   const um = [...cur.messages].reverse().find(x => x.role==='user' && x.text);
@@ -458,11 +458,11 @@ function drawerAct(act){
 function buildModelMenu(){
   const menu = $('#modelMenu');
   menu.innerHTML = '';
-  CFG.models.forEach((m,i) => {
+  CFG.models.forEach((m) => {
     const b = document.createElement('button');
-    b.className = i===SET.model ? 'on' : '';
+    b.className = m.id===SET.model ? 'on' : '';
     b.innerHTML = '<span>'+esc(m.label)+'</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-    b.onclick = () => { SET.model = i; save('lc_set', SET); buildModelMenu(); menu.classList.add('hidden'); };
+    b.onclick = () => { SET.model = m.id; save('lc_set', SET); buildModelMenu(); menu.classList.add('hidden'); };
     menu.appendChild(b);
   });
 }
@@ -818,7 +818,8 @@ function bindEvents(){
 /* ---------- Init ---------- */
 async function init(){
   try{ const r = await fetch('/api/config'); const j = await r.json(); if(j.models && j.models.length) CFG = j; }catch(e){}
-  if(SET.model >= CFG.models.length) SET.model = 0;
+  if(typeof SET.model === 'number') SET.model = (CFG.models[SET.model]||CFG.models[0]||{}).id || null;
+  if(!CFG.models.some(m => m.id===SET.model)) SET.model = (CFG.models[0]||{}).id || null;
   buildModelMenu(); applyColor(); buildColors(); applyWallpaper(); applyMode();
   document.querySelectorAll('#modeRow button').forEach(b => b.onclick = () => {
     SET.mode = b.dataset.mode; save('lc_set', SET); applyMode();
