@@ -619,7 +619,9 @@ app.post('/api/chat', async (req, res) => {
     }
     // Pengingat di akhir: riwayat bisa berisi identitas model lain (ganti-ganti model),
     // jadi tegaskan lagi tepat sebelum model menjawab agar tidak ketuker.
-    outMessages = [...outMessages, { role: 'system', content: '[Pengingat sistem — jangan dikutip dalam jawaban.] Kamu adalah ' + modelLabel + ', bukan model lain yang disebut di riwayat. Jangan membuka jawaban dengan identitas kecuali pengguna bertanya tentang identitas.' }];
+    // Catatan: JANGAN pakai awalan meta seperti "[Pengingat sistem — ...]" karena
+    // model malah mengutipnya mentah-mentah di awal jawaban (terbukti 2026-10-03).
+    outMessages = [...outMessages, { role: 'system', content: 'Kamu adalah ' + modelLabel + ', bukan model lain yang disebut di riwayat. Jangan membuka jawaban dengan identitas kecuali pengguna bertanya tentang identitas.' }];
   }
   try {
     // Model bisa punya provider sendiri (base URL + key khusus); kalau tidak, pakai bawaan
