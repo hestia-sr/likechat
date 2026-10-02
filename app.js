@@ -140,10 +140,10 @@ function downloadCodeZip(blocks){
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 5000);
 }
 function zipCardEl(blocks){
-  const el=document.createElement('div');
-  el.className='zip-card';
+  const el=document.createElement('button');
+  el.className='zip-link';
   el._blocks=blocks;
-  el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg><span>kode.zip</span><em>'+blocks.length+' file</em>';
+  el.textContent='Download kode.zip ('+blocks.length+' file)';
   return el;
 }
 
@@ -189,7 +189,7 @@ function renderMsg(m, idx){
     if(!inner) inner = typingHtml(m);
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
-    if(d._blocks.length) d.appendChild(zipCardEl(d._blocks));
+    if(!streaming && d._blocks.length) d.appendChild(zipCardEl(d._blocks));
   }
   return d;
 }
@@ -207,7 +207,7 @@ function updateAiMsg(div, m){
   else if(!m.gen) inner += typingHtml(m);
   div.innerHTML = inner;
   div._blocks = _blocks.slice();
-  if(div._blocks.length) div.appendChild(zipCardEl(div._blocks));
+  if(!streaming && div._blocks.length) div.appendChild(zipCardEl(div._blocks));
 }
 
 /* ---------- Chat: simpan & riwayat ---------- */
@@ -651,7 +651,7 @@ function bindEvents(){
   }, { passive:true });
 
   msgsEl.addEventListener('click', e => {
-    const zc = e.target.closest('.zip-card');
+    const zc = e.target.closest('.zip-link');
     if(zc){
       const blocks = zc._blocks || (zc.closest('.msg')||{})._blocks || [];
       if(blocks.length) downloadCodeZip(blocks);
