@@ -76,7 +76,10 @@ function md(src){
   }
   closeList();
   h = out.join('');
-  h = h.replace(/\uE000(\d+)\uE001/g, (m,i) => codeBoxHtml(_blocks[+i], +i));
+  // Kotak kode mentah tidak ditampilkan — hanya link download ZIP yang muncul.
+  // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
+  h = h.replace(/<p>\d+<\/p>/g, '');
+  h = h.replace(/\d+/g, '');
   return h;
 }
 
