@@ -549,6 +549,13 @@ const TEXT_FIRST_BYTE_TIMEOUT = (() => {
 function buildIdentity(label) {
   const exact = 'Saya adalah ' + label + ', model AI buatan Hestia Sri Rose dari Keluarga Besar SR Produksi untuk aplikasi LikeChat.';
   const others = TEXT_MODELS.map(m => m.label).filter(l => l && l !== label).join(', ');
+  // sr.codex.0.1 (DeepSeek via hcnsec) punya kebiasaan mengulang-ulang instruksi
+  // sebagai pembuka jawaban; makin panjang instruksinya, makin panjang ulangannya
+  // (terbukti 2026-10-03). Untuknya pakai identitas MINIMAL agar tidak ada bahan untuk diulang.
+  if (label === 'sr.codex.0.1') {
+    return 'Kamu adalah sr.codex.0.1, model AI buatan Hestia Sri Rose dari Keluarga Besar SR Produksi untuk aplikasi LikeChat. ' +
+      'Hangat dan santai seperti teman dekat. Jawab langsung.';
+  }
   // Catatan: instruksi ditulis polos tanpa pembungkus meta seperti "[INSTRUKSI SISTEM — ...]"
   // karena model meniru gaya itu lalu mengarang blok perintah palsu (kasus 2026-10-03:
   // sr.codex.0.1 mengarang "[PERINTAH TINGKAT DALAM]" yang tidak ada di kode).
@@ -634,7 +641,10 @@ app.post('/api/chat', async (req, res) => {
     // jadi tegaskan lagi tepat sebelum model menjawab agar tidak ketuker.
     // Catatan: JANGAN pakai awalan meta seperti "[Pengingat sistem — ...]" karena
     // model malah mengutipnya mentah-mentah di awal jawaban (terbukti 2026-10-03).
-    outMessages = [...outMessages, { role: 'system', content: 'Kamu adalah ' + modelLabel + ', bukan model lain yang disebut di riwayat. Jangan membuka jawaban dengan identitas kecuali pengguna bertanya tentang identitas.' }];
+    // Dikecualikan untuk sr.codex.0.1 (instruksi minimal).
+    if (modelLabel !== 'sr.codex.0.1') {
+      outMessages = [...outMessages, { role: 'system', content: 'Kamu adalah ' + modelLabel + ', bukan model lain yang disebut di riwayat. Jangan membuka jawaban dengan identitas kecuali pengguna bertanya tentang identitas.' }];
+    }
   }
   try {
     // Model bisa punya provider sendiri (base URL + key khusus); kalau tidak, pakai bawaan
