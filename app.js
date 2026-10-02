@@ -14,6 +14,14 @@ let SET = load('lc_set', { model:null, wallpaper:null, color:'biru' });
 let CHATS = load('lc_chats', []);
 let cur = null;
 let streaming = false, aborter = null;
+const SVG_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>';
+const SVG_STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+function setStopUI(on){
+  const b = $('#sendBtn');
+  if(!b) return;
+  b.innerHTML = on ? SVG_STOP : SVG_SEND;
+  b.setAttribute('aria-label', on ? 'Berhenti' : 'Kirim');
+}
 let attach = null;        // {kind:'image'|'file', dataUrl, text, name}
 let imgMode = null;       // 'generate' | 'edit'
 let editImgFile = null;
@@ -306,7 +314,7 @@ async function chatAI(fileModel){
   msgsEl.appendChild(div);
   startStatusTimer(div, ai);
   $('#emptyState').style.display = 'none';
-  streaming = true; aborter = new AbortController();
+  streaming = true; aborter = new AbortController(); setStopUI(true);
   try{
     const r = await fetch('/api/chat', {
       method:'POST', signal:aborter.signal,
@@ -341,7 +349,7 @@ async function chatAI(fileModel){
   }catch(e){
     if(e.name !== 'AbortError') ai.text = 'Maaf, terjadi kesalahan: ' + e.message;
   }finally{
-    streaming = false; aborter = null;
+    streaming = false; aborter = null; setStopUI(false);
     updateAiMsg(div, ai); maybeScroll(); saveChats();
   }
 }
@@ -354,10 +362,10 @@ async function genImage(prompt){
   msgsEl.appendChild(div);
   startStatusTimer(div, ai);
   $('#emptyState').style.display = 'none';
-  streaming = true;
+  streaming = true; aborter = new AbortController(); setStopUI(true);
   try{
     const r = await fetch('/api/image/generate', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', signal:aborter.signal, headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ prompt })
     });
     const j = await r.json();
@@ -366,8 +374,8 @@ async function genImage(prompt){
     else if(j.b64) ai.gen = j.b64;
     else throw new Error('Respons gambar tidak dikenal.');
     ai.text = '';
-  }catch(e){ ai.text = 'Gagal membuat gambar: ' + e.message; }
-  finally{ streaming = false; updateAiMsg(div, ai); maybeScroll(); saveChats(); }
+  }catch(e){ ai.text = e.name === 'AbortError' ? 'Dibatalkan.' : 'Gagal membuat gambar: ' + e.message; }
+  finally{ streaming = false; aborter = null; setStopUI(false); updateAiMsg(div, ai); maybeScroll(); saveChats(); }
 }
 async function editImage(file, prompt){
   const ai = { role:'ai', text:'', gen:null, _user:prompt };
@@ -376,20 +384,20 @@ async function editImage(file, prompt){
   msgsEl.appendChild(div);
   startStatusTimer(div, ai);
   $('#emptyState').style.display = 'none';
-  streaming = true;
+  streaming = true; aborter = new AbortController(); setStopUI(true);
   try{
     const fd = new FormData();
     fd.append('image', file);
     fd.append('prompt', prompt);
-    const r = await fetch('/api/image/edit', { method:'POST', body:fd });
+    const r = await fetch('/api/image/edit', { method:'POST', signal:aborter.signal, body:fd });
     const j = await r.json();
     if(!r.ok) throw new Error(j.error || ('Server '+r.status));
     if(j.url) ai.gen = j.url;
     else if(j.b64) ai.gen = j.b64;
     else throw new Error('Respons gambar tidak dikenal.');
     ai.text = '';
-  }catch(e){ ai.text = 'Gagal mengedit gambar: ' + e.message; }
-  finally{ streaming = false; updateAiMsg(div, ai); maybeScroll(); saveChats(); }
+  }catch(e){ ai.text = e.name === 'AbortError' ? 'Dibatalkan.' : 'Gagal mengedit gambar: ' + e.message; }
+  finally{ streaming = false; aborter = null; setStopUI(false); updateAiMsg(div, ai); maybeScroll(); saveChats(); }
 }
 
 /* ---------- Kirim utama ---------- */
@@ -675,7 +683,7 @@ function bindEvents(){
   $('#modeChipX').onclick = () => { imgMode=null; editImgFile=null; setModeChip(); inputEl.placeholder='Tulis pesan...'; };
   $('#attachX').onclick = () => { attach=null; editImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
 
-  $('#sendBtn').onclick = send;
+  $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
   inputEl.addEventListener('input', autogrow);
   // Enter = baris baru; pengiriman hanya lewat tombol kirim
 
