@@ -455,7 +455,7 @@ function setModeChip(){
 }
 
 /* ---------- Panel & scrim ---------- */
-const PANELS = ['drawer','infoPanel','settings','codePanel'];
+const PANELS = ['drawer','infoPanel','accountPanel','settings','codePanel'];
 function closePanels(){
   PANELS.forEach(p => $('#'+p).classList.remove('open'));
   const s = $('#scrim');
@@ -494,7 +494,7 @@ function drawerAct(act){
   else if(act==='history'){ $('#historyList').classList.toggle('hidden'); }
   else if(act==='clear'){ if(confirm('Hapus semua riwayat pesan?')){ CHATS=[]; newChat(); closePanels(); } }
   else if(act==='info'){ openPanel('infoPanel'); }
-  else if(act==='account'){ location.href = (ME && ME.user) ? '/auth/logout' : '/auth/google'; }
+  else if(act==='account'){ openAccountPanel(); }
 }
 
 /* ---------- Akun (login Google) ---------- */
@@ -514,8 +514,36 @@ async function refreshMe(){
     if(!btn || !label) return;
     if(!j.google_on){ btn.style.display = 'none'; return; }
     btn.style.display = '';
-    label.textContent = j.user ? ('Keluar — ' + (j.user.name || j.user.email || '').split(' ')[0]) : 'Masuk dengan Google';
+    label.textContent = 'Akun';
   }catch(e){}
+}
+
+/* ---------- Panel akun ---------- */
+function openAccountPanel(){
+  const u = ME && ME.user;
+  const photo = $('#accPhoto'), name = $('#accName'), email = $('#accEmail');
+  if(u && u.picture){ photo.src = u.picture; photo.classList.remove('hidden'); }
+  else photo.classList.add('hidden');
+  name.textContent = u ? (u.name || 'Pengguna') : 'Tamu';
+  email.textContent = u ? (u.email || '') : 'Belum login';
+  $('#accLogoutLabel').textContent = u ? 'Keluar' : 'Masuk dengan Google';
+  $('#accList').innerHTML = '';
+  openPanel('accountPanel');
+}
+function collectChatFiles(){
+  const out = [];
+  CHATS.forEach(c => (c.messages || []).forEach(m => {
+    if(m.role === 'user' && m.file) out.push({ name: m.file.name, content: m.file.content, chat: c.title });
+  }));
+  return out;
+}
+function collectChatImages(){
+  const out = [];
+  CHATS.forEach(c => (c.messages || []).forEach(m => {
+    if(m.role === 'user' && m.img) out.push({ src: m.img, chat: c.title });
+    else if(m.role === 'ai' && m.gen) out.push({ src: m.gen, chat: c.title });
+  }));
+  return out;
 }
 
 /* ---------- Model ---------- */
@@ -674,6 +702,47 @@ function bindEvents(){
   document.addEventListener('click', e => { if(!mm.classList.contains('hidden') && !e.target.closest('#modelMenu') && !e.target.closest('#modelBtn')) mm.classList.add('hidden'); });
 
   document.querySelectorAll('.drawer-item').forEach(b => b.onclick = () => drawerAct(b.dataset.act));
+  $('#accFilesBtn').onclick = () => {
+    const box = $('#accList'); box.innerHTML = '';
+    const files = collectChatFiles();
+    if(!files.length){ box.innerHTML = '<div class="acc-empty">Belum ada file tersimpan.</div>'; return; }
+    files.forEach(f => {
+      const b = document.createElement('button');
+      b.className = 'acc-file';
+      b.innerHTML = '<span></span><small></small>';
+      b.querySelector('span').textContent = f.name;
+      b.querySelector('small').textContent = f.chat || '';
+      b.onclick = () => {
+        const ext = (f.name.split('.').pop() || 'txt').toLowerCase();
+        $('#codeLang').textContent = ext;
+        $('#codePanel pre code').textContent = f.content || '';
+        codeCtx = null;
+        openPanel('codePanel');
+      };
+      box.appendChild(b);
+    });
+  };
+  $('#accImagesBtn').onclick = () => {
+    const box = $('#accList'); box.innerHTML = '';
+    const imgs = collectChatImages();
+    if(!imgs.length){ box.innerHTML = '<div class="acc-empty">Belum ada gambar terlampir.</div>'; return; }
+    const grid = document.createElement('div');
+    grid.className = 'acc-grid';
+    imgs.forEach(im => {
+      const t = document.createElement('img');
+      t.src = im.src; t.alt = ''; t.loading = 'lazy';
+      t.onclick = () => {
+        $('#imgViewerImg').src = im.src;
+        $('#imgViewer').classList.remove('hidden');
+        ivReset();
+      };
+      grid.appendChild(t);
+    });
+    box.appendChild(grid);
+  };
+  $('#accLogoutBtn').onclick = () => {
+    location.href = (ME && ME.user) ? '/auth/logout' : '/auth/google';
+  };
   $('#searchInput').addEventListener('input', e => renderHistory(e.target.value));
   refreshMe();
 
