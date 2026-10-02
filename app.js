@@ -49,7 +49,7 @@ function codeBoxHtml(b, i){
     '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></div>'+
     '<div class="codebox-peek">'+esc(peek)+'</div></div>';
 }
-function md(src){
+function md(src, hideCode){
   _blocks = [];
   src = String(src).replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, (m, lang, code) => {
     _blocks.push({ lang:(lang||'code').toLowerCase(), code:code.replace(/\n+$/,'') });
@@ -76,11 +76,30 @@ function md(src){
   }
   closeList();
   h = out.join('');
-  // Kotak kode mentah tidak ditampilkan — hanya link download ZIP yang muncul.
-  // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
-  h = h.replace(/<p>\d+<\/p>/g, '');
-  h = h.replace(/\d+/g, '');
+  if(hideCode){
+    // Kode panjang / diminta ZIP: kotak kode mentah disembunyikan, hanya link ZIP yang tampil.
+    // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
+    h = h.replace(/<p>\uE000\d+\uE001<\/p>/g, '');
+    h = h.replace(/\uE000\d+\uE001/g, '');
+  } else {
+    h = h.replace(/\uE000(\d+)\uE001/g, (m,i) => codeBoxHtml(_blocks[+i], +i));
+  }
   return h;
+}
+// Hitung blok kode pada teks mentah (sebelum md): jumlah blok & total baris
+function codeStats(text){
+  let n = 0, lines = 0;
+  String(text||'').replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, (m, lang, code) => {
+    n++;
+    lines += code.replace(/\n+$/,'').split('\n').length;
+  });
+  return { n, lines };
+}
+// true jika pesan ini sebaiknya jadi ZIP saja (kode panjang atau pengguna minta zip)
+function useZipOnly(m, st){
+  if(!st.n) return false;
+  if(m && m._wantZip) return true;
+  return st.lines > 30;
 }
 
 /* ---------- ZIP mini: bikin file .zip tanpa library ---------- */
@@ -188,11 +207,16 @@ function renderMsg(m, idx){
   } else {
     let inner = '';
     if(m.gen) inner += '<img class="gen-img" src="'+m.gen+'" alt="Hasil gambar">';
-    if(m.text) inner += md(m.text);
+    let zipOnly = false;
+    if(m.text){
+      const st = codeStats(m.text);
+      zipOnly = !streaming && useZipOnly(m, st);
+      inner += md(m.text, zipOnly);
+    }
     if(!inner) inner = typingHtml(m);
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
-    if(!streaming && d._blocks.length) d.appendChild(zipCardEl(d._blocks));
+    if(zipOnly) d.appendChild(zipCardEl(d._blocks));
   }
   return d;
 }
@@ -206,11 +230,16 @@ function updateAiMsg(div, m){
   stopStatusTimer(m);
   let inner = '';
   if(m.gen) inner += '<img class="gen-img" src="'+m.gen+'" alt="Hasil gambar">';
-  if(m.text) inner += md(m.text);
+  let zipOnly = false;
+  if(m.text){
+    const st = codeStats(m.text);
+    zipOnly = !streaming && useZipOnly(m, st);
+    inner += md(m.text, zipOnly);
+  }
   else if(!m.gen) inner += typingHtml(m);
   div.innerHTML = inner;
   div._blocks = _blocks.slice();
-  if(!streaming && div._blocks.length) div.appendChild(zipCardEl(div._blocks));
+  if(zipOnly) div.appendChild(zipCardEl(div._blocks));
 }
 
 /* ---------- Chat: simpan & riwayat ---------- */
@@ -272,6 +301,7 @@ async function chatAI(fileModel){
   cur.messages.push(ai);
   const um = [...cur.messages].reverse().find(x => x.role==='user' && x.text);
   if(um) ai._user = um.text;
+  ai._wantZip = !!(um && /zip/i.test(um.text || ''));
   const div = renderMsg(ai, cur.messages.length-1);
   msgsEl.appendChild(div);
   startStatusTimer(div, ai);
