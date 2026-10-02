@@ -73,6 +73,38 @@ const FALLBACK_MODELS = [
 const TEXT_MODELS = [1, 2, 3, 4, 5, 6, 7, 8].map(parseModelEnv).filter(Boolean);
 if (TEXT_MODELS.length === 0) TEXT_MODELS.push(...FALLBACK_MODELS);
 
+// ---------- Model pembaca file & gambar (bisa diganti lewat .env) ----------
+// Format FILE_MODEL: "label:id@grup" atau "id@grup" atau "id" saja.
+// Grup -> baca <GRUP>_BASE_URL dan <GRUP>_API_KEY_1..5.
+// Bisa juga override eksplisit: FILE_MODEL_BASE_URL, FILE_MODEL_API_KEY_1..5.
+function parseFileModel(){
+  const raw = (process.env.FILE_MODEL || 'kimi-k3').trim();
+  const sep = raw.indexOf(':');
+  let label, id;
+  if (sep < 0) { label = raw; id = raw; }
+  else { label = raw.slice(0, sep).trim(); id = raw.slice(sep + 1).trim(); }
+  const entry = { label, id };
+  const at = id.lastIndexOf('@');
+  let prov = null;
+  if (at > 0) { prov = id.slice(at + 1).trim().toUpperCase(); entry.id = id.slice(0, at).trim(); }
+  const bu = (process.env.FILE_MODEL_BASE_URL || '').trim().replace(/\/$/, '');
+  if (bu) entry.baseUrl = bu;
+  const keys = [];
+  for (let k = 1; k <= 5; k++) { const key = process.env['FILE_MODEL_API_KEY_' + k]; if (key) keys.push(key); }
+  if (keys.length) entry.keys = keys;
+  if (prov && !entry.baseUrl) {
+    const pbu = (process.env[prov + '_BASE_URL'] || '').trim().replace(/\/$/, '');
+    if (pbu) entry.baseUrl = pbu;
+  }
+  if (prov && !entry.keys) {
+    const pkeys = [];
+    for (let k = 1; k <= 5; k++) { const key = process.env[prov + '_API_KEY_' + k]; if (key) pkeys.push(key); }
+    if (pkeys.length) entry.keys = pkeys;
+  }
+  return entry;
+}
+const FILE_MODEL_ENTRY = parseFileModel();
+
 // ---------- Batasan akses tamu (belum login Google) ----------
 // Tamu hanya boleh memakai 1 model chat dan tidak bisa buat/edit gambar.
 // Berlaku hanya bila login Google aktif (GOOGLE_ON); kalau tidak, bebas.
@@ -414,6 +446,7 @@ function upstreamError(status, text) {
 app.get('/api/config', (req, res) => {
   res.json({
     models: modelsFor(req),
+    fileModel: { label: FILE_MODEL_ENTRY.label, id: FILE_MODEL_ENTRY.id },
     image: { model: IMAGE_MODEL, label: IMAGE_MODEL_LABEL, width: IMAGE_WIDTH, height: IMAGE_HEIGHT, steps: IMAGE_STEPS },
     hasTextKeys: TEXT_KEYS.length,
     hasImageKeys: IMAGE_KEYS.length,
@@ -493,7 +526,12 @@ app.post('/api/chat', async (req, res) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages kosong' });
   }
-  if (guestBlocked(req) && !modelsFor(req).some(m => m.id === useModel)) {
+  // Model pembaca file juga boleh dipakai (selain daftar model chat)
+  const allowedIds = modelsFor(req).map(m => m.id);
+  if (FILE_MODEL_ENTRY && FILE_MODEL_ENTRY.id && !allowedIds.includes(FILE_MODEL_ENTRY.id)) allowedIds.push(FILE_MODEL_ENTRY.id);
+  const modelEntry = TEXT_MODELS.find(m => m.id === useModel) ||
+    (FILE_MODEL_ENTRY && FILE_MODEL_ENTRY.id === useModel ? FILE_MODEL_ENTRY : null);
+  if (guestBlocked(req) && !allowedIds.includes(useModel)) {
     return res.status(403).json({ error: 'Login dengan Google untuk memakai semua model.' });
   }
   if (guestBlocked(req)) {
@@ -526,7 +564,7 @@ app.post('/api/chat', async (req, res) => {
   }
   // Suntik identitas LikeChat di awal daftar pesan (nama versi per model)
   {
-    const ent = TEXT_MODELS.find(m => m.id === useModel);
+    const ent = modelEntry;
     const modelLabel = (ent && ent.label) || useModel;
     const identity = SYSTEM_PROMPT || buildIdentity(modelLabel);
     if (!(outMessages[0] && outMessages[0].role === 'system')) {
@@ -538,7 +576,7 @@ app.post('/api/chat', async (req, res) => {
   }
   try {
     // Model bisa punya provider sendiri (base URL + key khusus); kalau tidak, pakai bawaan
-    const entry = TEXT_MODELS.find(m => m.id === useModel);
+    const entry = modelEntry;
     const baseUrl = (entry && entry.baseUrl) || TEXT_BASE_URL;
     const keys = (entry && entry.keys && entry.keys.length) ? entry.keys : TEXT_KEYS;
     const upstream = await tryKeys(keys, async (key) => {
