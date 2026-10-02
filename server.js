@@ -365,6 +365,9 @@ app.post('/api/chat', async (req, res) => {
     if (!(outMessages[0] && outMessages[0].role === 'system')) {
       outMessages = [{ role: 'system', content: identity }, ...outMessages];
     }
+    // Pengingat di akhir: riwayat bisa berisi identitas model lain (ganti-ganti model),
+    // jadi tegaskan lagi tepat sebelum model menjawab agar tidak ketuker.
+    outMessages = [...outMessages, { role: 'system', content: 'Pengingat terakhir: namamu adalah ' + modelLabel + '. Jawablah sebagai ' + modelLabel + '.' }];
   }
   try {
     // Model bisa punya provider sendiri (base URL + key khusus); kalau tidak, pakai bawaan
