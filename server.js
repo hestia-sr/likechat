@@ -493,6 +493,14 @@ app.post('/api/chat', async (req, res) => {
   if (guestBlocked(req) && !modelsFor(req).some(m => m.id === useModel)) {
     return res.status(403).json({ error: 'Login dengan Google untuk memakai semua model.' });
   }
+  if (guestBlocked(req)) {
+    const hasAttachment = (messages || []).some(m => {
+      if (!m || m.role !== 'user') return false;
+      if (Array.isArray(m.content)) return m.content.some(p => p && p.type === 'image_url');
+      return typeof m.content === 'string' && m.content.startsWith('[File: ');
+    });
+    if (hasAttachment) return res.status(403).json({ error: 'Login dengan Google untuk mengirim gambar/file.' });
+  }
   // Pencarian web otomatis: selipkan hasil internet ke pesan terakhir pengguna
   let outMessages = messages;
   if (WEB_SEARCH_ON) {
