@@ -499,6 +499,12 @@ function drawerAct(act){
 
 /* ---------- Akun (login Google) ---------- */
 let ME = null;
+function needLogin(aksi){
+  if(!ME || !ME.google_on) return true; // login tidak tersedia -> bebas
+  if(ME.user) return true;
+  alert('Login dengan Google dulu untuk ' + aksi + '.');
+  return false;
+}
 async function refreshMe(){
   try{
     const r = await fetch('/api/me');
@@ -680,8 +686,8 @@ function bindEvents(){
     if(k==='gallery') $('#fileGallery').click();
     else if(k==='camera') $('#fileCamera').click();
     else if(k==='file') $('#fileAny').click();
-    else if(k==='generate'){ imgMode='generate'; setModeChip(); inputEl.placeholder='Deskripsikan gambar yang ingin dibuat...'; inputEl.focus(); }
-    else if(k==='edit'){ $('#fileEditImg').click(); }
+    else if(k==='generate'){ if(!needLogin('membuat gambar')) return; imgMode='generate'; setModeChip(); inputEl.placeholder='Deskripsikan gambar yang ingin dibuat...'; inputEl.focus(); }
+    else if(k==='edit'){ if(!needLogin('mengedit gambar')) return; $('#fileEditImg').click(); }
   });
   $('#fileGallery').onchange = e => { handlePicked('img', e.target.files[0]); e.target.value=''; };
   $('#fileCamera').onchange = e => { handlePicked('img', e.target.files[0]); e.target.value=''; };
