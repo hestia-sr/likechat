@@ -69,7 +69,8 @@ function md(src){
   for(const ln of lines){
     const t = ln.trim();
     let m;
-    if((m = t.match(/^[-*]\s+(.*)/))){ if(list!=='ul'){ closeList(); out.push('<ul>'); list='ul'; } out.push('<li>'+m[1]+'</li>'); }
+    if((m = t.match(/^(#{1,6})\s+(.*)/))){ closeList(); const lv = m[1].length; out.push('<h'+lv+'>'+m[2]+'</h'+lv+'>'); }
+    else if((m = t.match(/^[-*]\s+(.*)/))){ if(list!=='ul'){ closeList(); out.push('<ul>'); list='ul'; } out.push('<li>'+m[1]+'</li>'); }
     else if((m = t.match(/^\d+[.)]\s+(.*)/))){ if(list!=='ol'){ closeList(); out.push('<ol>'); list='ol'; } out.push('<li>'+m[1]+'</li>'); }
     else { closeList(); if(t) out.push('<p>'+ln+'</p>'); }
   }
