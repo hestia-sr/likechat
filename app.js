@@ -421,8 +421,11 @@ async function send(){
   const um = { role:'user', text:text };
   let useFileModel = null;
   if(attach){
+    // Semua lampiran (gambar maupun file) dibaca oleh model pembaca khusus (dari /api/config)
+    useFileModel = (CFG.fileModel && CFG.fileModel.id) || 'kimi-k3';
+    um.fileModel = useFileModel;
     if(attach.kind === 'image'){ um.img = attach.dataUrl; }
-    else { um.file = { name:attach.name, content:attach.text }; useFileModel = 'kimi-k3'; um.fileModel = 'kimi-k3'; }
+    else { um.file = { name:attach.name, content:attach.text }; }
   }
   pushUserObj(um); clearComposer();
   await chatAI(useFileModel);
