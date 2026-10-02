@@ -494,6 +494,22 @@ function drawerAct(act){
   else if(act==='history'){ $('#historyList').classList.toggle('hidden'); }
   else if(act==='clear'){ if(confirm('Hapus semua riwayat pesan?')){ CHATS=[]; newChat(); closePanels(); } }
   else if(act==='info'){ openPanel('infoPanel'); }
+  else if(act==='account'){ location.href = (ME && ME.user) ? '/auth/logout' : '/auth/google'; }
+}
+
+/* ---------- Akun (login Google) ---------- */
+let ME = null;
+async function refreshMe(){
+  try{
+    const r = await fetch('/api/me');
+    const j = await r.json();
+    ME = j;
+    const btn = $('#accountBtn'), label = $('#accountLabel');
+    if(!btn || !label) return;
+    if(!j.google_on){ btn.style.display = 'none'; return; }
+    btn.style.display = '';
+    label.textContent = j.user ? ('Keluar — ' + (j.user.name || j.user.email || '').split(' ')[0]) : 'Masuk dengan Google';
+  }catch(e){}
 }
 
 /* ---------- Model ---------- */
@@ -653,6 +669,7 @@ function bindEvents(){
 
   document.querySelectorAll('.drawer-item').forEach(b => b.onclick = () => drawerAct(b.dataset.act));
   $('#searchInput').addEventListener('input', e => renderHistory(e.target.value));
+  refreshMe();
 
   const pm = $('#plusMenu');
   $('#plusBtn').onclick = e => { e.stopPropagation(); pm.classList.toggle('hidden'); };
