@@ -683,9 +683,9 @@ function bindEvents(){
   document.querySelectorAll('#plusMenu [data-plus]').forEach(b => b.onclick = () => {
     pm.classList.add('hidden');
     const k = b.dataset.plus;
-    if(k==='gallery') $('#fileGallery').click();
-    else if(k==='camera') $('#fileCamera').click();
-    else if(k==='file') $('#fileAny').click();
+    if(k==='gallery'){ if(!needLogin('mengirim gambar')) return; $('#fileGallery').click(); }
+    else if(k==='camera'){ if(!needLogin('mengambil foto')) return; $('#fileCamera').click(); }
+    else if(k==='file'){ if(!needLogin('mengirim file')) return; $('#fileAny').click(); }
     else if(k==='generate'){ if(!needLogin('membuat gambar')) return; imgMode='generate'; setModeChip(); inputEl.placeholder='Deskripsikan gambar yang ingin dibuat...'; inputEl.focus(); }
     else if(k==='edit'){ if(!needLogin('mengedit gambar')) return; $('#fileEditImg').click(); }
   });
