@@ -242,6 +242,20 @@ app.use(cookieSession({
   sameSite: 'lax'
 }));
 app.use(passport.initialize());
+// cookie-session tidak punya regenerate()/save() seperti express-session,
+// padahal passport 0.7 memanggil keduanya saat login/logout.
+// Shim: regenerate jadi no-op (tidak ada session id sisi server yang perlu diputar),
+// save jadi no-op (cookie-session otomatis menyimpan saat response dikirim).
+// Dibuat non-enumerable agar tidak dihitung sebagai isi session (isPopulated).
+app.use((req, res, next) => {
+  if (req.session && typeof req.session.regenerate !== 'function') {
+    Object.defineProperties(req.session, {
+      regenerate: { value: (cb) => { if (cb) cb(); }, enumerable: false, writable: true, configurable: true },
+      save: { value: (cb) => { if (cb) cb(); }, enumerable: false, writable: true, configurable: true }
+    });
+  }
+  next();
+});
 app.use(passport.session());
 
 passport.serializeUser((user, done) => done(null, user.id));
