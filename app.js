@@ -703,6 +703,7 @@ function bindEvents(){
 
   document.querySelectorAll('.drawer-item').forEach(b => b.onclick = () => drawerAct(b.dataset.act));
   $('#accFilesBtn').onclick = () => {
+    if(!needLogin('melihat file tersimpan')) return;
     const box = $('#accList'); box.innerHTML = '';
     const files = collectChatFiles();
     if(!files.length){ box.innerHTML = '<div class="acc-empty">Belum ada file tersimpan.</div>'; return; }
@@ -723,6 +724,7 @@ function bindEvents(){
     });
   };
   $('#accImagesBtn').onclick = () => {
+    if(!needLogin('melihat gambar terlampir')) return;
     const box = $('#accList'); box.innerHTML = '';
     const imgs = collectChatImages();
     if(!imgs.length){ box.innerHTML = '<div class="acc-empty">Belum ada gambar terlampir.</div>'; return; }
