@@ -73,6 +73,50 @@ const FALLBACK_MODELS = [
 const TEXT_MODELS = [1, 2, 3, 4, 5, 6, 7, 8].map(parseModelEnv).filter(Boolean);
 if (TEXT_MODELS.length === 0) TEXT_MODELS.push(...FALLBACK_MODELS);
 
+// ---------- Skema baru: konfigurasi dikelompokkan per provider ----------
+//   baseurl_<provider>    : base URL provider (opsional; hcnsec punya bawaan)
+//   apikey_<provider>_<n> : API key ke-n (1..9), failover berurutan
+//   model_<provider>_<n>  : "label:id" model ke-n provider itu
+// Contoh:
+//   apikey_vyce_1=xxxx
+//   model_vyce_1=sr.lite.0.1-flash:gpt-6-luna
+// Skema baru diprioritaskan bila ada; skema lama (TEXT_MODEL_*) tetap jalan.
+function parseProviderScheme() {
+  const provNums = {};
+  for (const k of Object.keys(process.env)) {
+    const m = /^model_([a-z0-9]+)_(\d+)$/i.exec(k);
+    if (!m) continue;
+    const p = m[1].toLowerCase();
+    (provNums[p] = provNums[p] || new Set()).add(+m[2]);
+  }
+  const provs = Object.keys(provNums);
+  if (!provs.length) return [];
+  provs.sort((a, b) => a === 'hcnsec' ? -1 : b === 'hcnsec' ? 1 : (a < b ? -1 : 1));
+  const models = [];
+  for (const p of provs) {
+    const baseUrl = (process.env['baseurl_' + p] || (p === 'hcnsec' ? 'https://api.hcnsec.cn/v1' : '')).trim().replace(/\/$/, '');
+    const keys = [];
+    for (let n = 1; n <= 9; n++) { const key = process.env['apikey_' + p + '_' + n]; if (key) keys.push(key); }
+    const nums = [...provNums[p]].sort((a, b) => a - b);
+    for (const n of nums) {
+      const raw = process.env['model_' + p + '_' + n];
+      if (!raw) continue;
+      const sep = raw.indexOf(':');
+      let label, id;
+      if (sep < 0) { label = raw.trim(); id = raw.trim(); }
+      else { label = raw.slice(0, sep).trim(); id = raw.slice(sep + 1).trim(); }
+      if (!id) continue;
+      const entry = { label: label || id, id };
+      if (baseUrl) entry.baseUrl = baseUrl;
+      if (keys.length) entry.keys = keys;
+      models.push(entry);
+    }
+  }
+  return models;
+}
+const _newModels = parseProviderScheme();
+if (_newModels.length) { TEXT_MODELS.length = 0; TEXT_MODELS.push(..._newModels); }
+
 app.use(express.json({ limit: '25mb' }));
 // Jangan pernah sajikan file sensitif / internal lewat HTTP
 const BLOCKED_FILES = new Set(['.env', '.env.example', 'package.json', 'package-lock.json', 'server.js', 'render.yaml', 'SPEC.md']);
