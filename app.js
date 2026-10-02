@@ -347,7 +347,8 @@ async function chatAI(fileModel){
       }
     }
   }catch(e){
-    if(e.name !== 'AbortError') ai.text = 'Maaf, terjadi kesalahan: ' + e.message;
+    if(e.name === 'AbortError'){ if(!ai.text) ai.text = 'Dibatalkan.'; }
+    else ai.text = 'Maaf, terjadi kesalahan: ' + e.message;
   }finally{
     streaming = false; aborter = null; setStopUI(false);
     updateAiMsg(div, ai); maybeScroll(); saveChats();
