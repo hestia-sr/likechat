@@ -743,14 +743,7 @@ function bindEvents(){
     box.appendChild(grid);
   };
   $('#accLogoutBtn').onclick = () => {
-    if(ME && ME.user){
-      // Saat keluar: hapus file & gambar tersimpan dari riwayat
-      CHATS.forEach(c => (c.messages || []).forEach(m => { delete m.img; delete m.file; delete m.gen; }));
-      saveChats();
-      location.href = '/auth/logout';
-    } else {
-      location.href = '/auth/google';
-    }
+    location.href = (ME && ME.user) ? '/auth/logout' : '/auth/google';
   };
   $('#searchInput').addEventListener('input', e => renderHistory(e.target.value));
   refreshMe();
