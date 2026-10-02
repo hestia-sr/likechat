@@ -510,6 +510,17 @@ async function refreshMe(){
     const r = await fetch('/api/me');
     const j = await r.json();
     ME = j;
+    // Isolasi per akun: akun berbeda yang masuk mulai baru seperti belum pernah interaksi
+    try{
+      const em = (j.user && j.user.email) || '';
+      const prev = localStorage.getItem('lc_account') || '';
+      if(em && prev && em !== prev && CHATS.length){
+        CHATS = []; cur = null;
+        save('lc_chats', CHATS);
+        newChat();
+      }
+      if(em) localStorage.setItem('lc_account', em);
+    }catch(e){}
     const btn = $('#accountBtn'), label = $('#accountLabel');
     if(!btn || !label) return;
     if(!j.google_on){ btn.style.display = 'none'; return; }
