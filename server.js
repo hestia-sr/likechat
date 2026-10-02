@@ -258,9 +258,18 @@ app.use((req, res, next) => {
 });
 app.use(passport.session());
 
-passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser((id, done) => {
-  try { done(null, findUserById(id)); }
+// Sesi dibuat STATELESS: profil user disimpan langsung di cookie (ditandatangani),
+// bukan cuma id. Alasan: file .data/users.json ikut terhapus setiap redeploy Railway,
+// sehingga session cookie berisi id angka tidak bisa dipetakan lagi -> user dianggap tamu.
+// Dengan profil di cookie, login tetap valid walau server di-redeploy berkali-kali.
+passport.serializeUser((user, done) => done(null, {
+  id: user.id, email: user.email, name: user.name, picture: user.picture
+}));
+passport.deserializeUser((obj, done) => {
+  try {
+    if (obj && typeof obj === 'object' && obj.email) return done(null, obj);
+    done(null, findUserById(obj)); // fallback cookie lama berisi id angka
+  }
   catch(e){ done(e); }
 });
 
