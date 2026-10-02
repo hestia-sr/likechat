@@ -1,13 +1,13 @@
 /* LikeChat — CSS ringan, tanpa framework */
 :root{
   --btn:#1e88e5; --btn-fg:#ffffff;
-  --ink:#ffffff; --ink-dim:rgba(255,255,255,.72);
+  --ink:#ffffff; --ink-dim:rgba(255,255,255,.88);
   --glass:rgba(20,22,28,.55); --glass2:rgba(255,255,255,.13);
   --radius:18px;
 }
 
 /* ---------- Mode terang ---------- */
-body.light{--ink:#1b1f27;--ink-dim:rgba(27,31,39,.66);
+body.light{--ink:#1b1f27;--ink-dim:rgba(27,31,39,.85);
   --glass:rgba(255,255,255,.66);--glass2:rgba(27,31,39,.08);
   background:#e9edf3}
 body.light #wallpaper{background:linear-gradient(160deg,#dde4ef,#f5f7fb)}
