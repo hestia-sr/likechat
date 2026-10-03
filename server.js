@@ -843,8 +843,6 @@ app.post('/api/image/edit', upload.single('image'), async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log('LikeChat jalan di http://localhost:' + PORT));
-
 // ---------- Buat video (text2video) ----------
 app.post('/api/video/generate', async (req, res) => {
   if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk membuat video.' });
@@ -856,7 +854,7 @@ app.post('/api/video/generate', async (req, res) => {
         model: VIDEO_MODEL, prompt: String(prompt),
         width: VIDEO_WIDTH, height: VIDEO_HEIGHT,
         seed: Math.floor(Math.random() * 1000000),
-        frames: VIDEO_FRAMES, fps: VIDEO_FPS,
+        frames: VIDEO_FRAMES, fps: VIDEO_FPS, steps: 1,
       };
       return await submitDeapiJob(key, VIDEO_GEN_URL, JSON.stringify(body), false);
     });
@@ -891,3 +889,5 @@ app.post('/api/video/animate', upload.single('image'), async (req, res) => {
   }
 });
 // redeploy: pastikan logo baru ikut ter-deploy
+
+app.listen(PORT, () => console.log('LikeChat jalan di http://localhost:' + PORT));
