@@ -102,6 +102,9 @@ button svg{display:block;width:22px;height:22px}
 .msg.ai small{font-size:12px;color:var(--ink-dim)}
 .msg.ai .gen-img{display:block;max-width:100%;border-radius:14px;margin:6px 0;box-shadow:0 6px 20px rgba(0,0,0,.45)}
 .msg.ai .gen-vid{display:block;max-width:100%;width:100%;border-radius:14px;margin:6px 0;box-shadow:0 6px 20px rgba(0,0,0,.45);background:#000}
+.vid-actions{display:flex;gap:8px;margin:2px 0 10px;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.vid-actions .icon-btn{width:36px;height:36px}
+.vid-actions .icon-btn svg{width:19px;height:19px}
 .typing{display:inline-flex;gap:10px;padding:10px 0;align-items:center}
 .typing .spin{width:28px;height:28px;position:relative;flex:none;animation:orbitSpin 2s linear infinite}
 .typing .spin i{position:absolute;width:8px;height:8px;transform:rotate(45deg);border-radius:2px}
