@@ -220,6 +220,7 @@ function renderMsg(m, idx){
     let inner = '';
     if(m.gen) inner += '<img class="gen-img" src="'+m.gen+'" alt="Hasil gambar">';
     if(m.vid) inner += '<video class="gen-vid" src="'+m.vid+'" controls playsinline preload="metadata"></video>';
+    if(m.vid) inner += vidActionsHtml(idx);
     let zipOnly = false;
     if(m.text){
       const st = codeStats(m.text);
@@ -244,6 +245,7 @@ function updateAiMsg(div, m){
   let inner = '';
   if(m.gen) inner += '<img class="gen-img" src="'+m.gen+'" alt="Hasil gambar">';
   if(m.vid) inner += '<video class="gen-vid" src="'+m.vid+'" controls playsinline preload="metadata"></video>';
+  if(m.vid) inner += vidActionsHtml(div.dataset.idx);
   let zipOnly = false;
   if(m.text){
     const st = codeStats(m.text);
@@ -408,8 +410,46 @@ async function editImage(file, prompt){
 }
 
 /* ---------- Video: buat & animasi ---------- */
+function vidActionsHtml(idx){
+  const b = (act, label, svg) => '<button class="icon-btn vid-act" data-act="'+act+'" data-idx="'+idx+'" aria-label="'+label+'">'+svg+'</button>';
+  const dl = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>';
+  const re = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+  const del = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+  return '<div class="vid-actions">'+b('download','Unduh video',dl)+b('retry','Buat ulang video',re)+b('delete','Hapus video',del)+'</div>';
+}
+async function downloadVideo(idx){
+  const m = cur.messages[idx]; if(!m || !m.vid) return;
+  try{
+    const r = await fetch(m.vid); if(!r.ok) throw new Error('fetch gagal');
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = 'likechat-video-' + Date.now() + '.mp4';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }catch(e){ window.open(m.vid, '_blank'); }
+}
+async function retryVideo(idx){
+  if(streaming) return;
+  const m = cur.messages[idx]; if(!m || !m.vid) return;
+  if(m._kind === 'anim'){
+    if(!m._img){ alert('Gambar sumber tidak tersimpan, tidak bisa buat ulang.'); return; }
+    try{
+      const r = await fetch(m._img); const blob = await r.blob();
+      const file = new File([blob], 'animasi.png', { type: blob.type || 'image/png' });
+      await animVideo(file, m._user || '', m._img);
+    }catch(e){ alert('Gagal membuat ulang: ' + e.message); }
+  } else {
+    await genVideo(m._user || '');
+  }
+}
+function deleteVideo(idx){
+  if(!cur.messages[idx]) return;
+  cur.messages.splice(idx, 1);
+  setTitle(); saveChats(); renderAll();
+}
 async function genVideo(prompt){
-  const ai = { role:'ai', text:'', vid:null, _user:prompt };
+  const ai = { role:'ai', text:'', vid:null, _user:prompt, _kind:'gen' };
   cur.messages.push(ai);
   const div = renderMsg(ai, cur.messages.length-1);
   msgsEl.appendChild(div);
@@ -429,8 +469,8 @@ async function genVideo(prompt){
   }catch(e){ ai.text = e.name === 'AbortError' ? 'Dibatalkan.' : 'Gagal membuat video: ' + e.message; }
   finally{ streaming = false; aborter = null; setStopUI(false); updateAiMsg(div, ai); maybeScroll(); saveChats(); }
 }
-async function animVideo(file, prompt){
-  const ai = { role:'ai', text:'', vid:null, _user:prompt };
+async function animVideo(file, prompt, imgDataUrl){
+  const ai = { role:'ai', text:'', vid:null, _user:prompt, _kind:'anim', _img:imgDataUrl || null };
   cur.messages.push(ai);
   const div = renderMsg(ai, cur.messages.length-1);
   msgsEl.appendChild(div);
@@ -477,7 +517,7 @@ async function send(){
     const imgData = attach && attach.kind === 'image' ? attach.dataUrl : null;
     pushUser(text, { img: imgData });
     const f = animImgFile; clearComposer();
-    await animVideo(f, text); return;
+    await animVideo(f, text, imgData); return;
   }
   if(!text && !attach) return;
   const um = { role:'user', text:text };
@@ -882,6 +922,14 @@ function bindEvents(){
   }, { passive:true });
 
   msgsEl.addEventListener('click', e => {
+    const vact = e.target.closest('.vid-act');
+    if(vact){
+      const idx = +vact.dataset.idx, act = vact.dataset.act;
+      if(act === 'download') downloadVideo(idx);
+      else if(act === 'retry') retryVideo(idx);
+      else if(act === 'delete') deleteVideo(idx);
+      return;
+    }
     const zc = e.target.closest('.zip-link');
     if(zc){
       const blocks = zc._blocks || (zc.closest('.msg')||{})._blocks || [];
