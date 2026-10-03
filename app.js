@@ -23,7 +23,8 @@ function setStopUI(on){
   b.setAttribute('aria-label', on ? 'Berhenti' : 'Kirim');
 }
 let attach = null;        // {kind:'image'|'file', dataUrl, text, name}
-let imgMode = null;       // 'generate' | 'edit'
+let imgMode = null;       // 'generate' | 'edit' | 'videogen' | 'videoanim'
+let animImgFile = null;  // file gambar untuk Animasi Gambar (img2video)
 let editImgFile = null;
 let popupIdx = null;
 let imgCtx = null; // index pesan untuk penampil gambar
@@ -182,7 +183,10 @@ function statusText(m){
   const snip = s => { s = String(s||'').replace(/\s+/g,' ').trim(); return s.length > 42 ? s.slice(0,42)+'…' : s; };
   const u = snip(m && m._user);
   const isImg = !!(m && ('gen' in m));
-  const phases = isImg
+  const isVid = !!(m && ('vid' in m));
+  const phases = isVid
+    ? ['Menyiapkan video…', u ? 'Membuat video "'+u+'"… (1-3 menit)' : 'Membuat video… (1-3 menit)']
+    : isImg
     ? ['Menyiapkan gambar…', u ? 'Menggambar "'+u+'"…' : 'Menggambar…']
     : [u ? 'Memahami "'+u+'"…' : 'Memahami perintah…', 'Menyusun jawaban…'];
   return phases[(m && m._phase) || 0] || phases[0];
@@ -194,7 +198,7 @@ function startStatusTimer(div, m){
   m._phase = 0;
   if(m._timer) clearInterval(m._timer);
   m._timer = setInterval(() => {
-    if(m.text || m.gen){ clearInterval(m._timer); m._timer = null; return; }
+    if(m.text || m.gen || m.vid){ clearInterval(m._timer); m._timer = null; return; }
     m._phase = ((m._phase || 0) + 1) % 2;
     div.innerHTML = typingHtml(m);
   }, 4000);
@@ -215,6 +219,7 @@ function renderMsg(m, idx){
   } else {
     let inner = '';
     if(m.gen) inner += '<img class="gen-img" src="'+m.gen+'" alt="Hasil gambar">';
+    if(m.vid) inner += '<video class="gen-vid" src="'+m.vid+'" controls playsinline preload="metadata"></video>';
     let zipOnly = false;
     if(m.text){
       const st = codeStats(m.text);
@@ -238,13 +243,14 @@ function updateAiMsg(div, m){
   stopStatusTimer(m);
   let inner = '';
   if(m.gen) inner += '<img class="gen-img" src="'+m.gen+'" alt="Hasil gambar">';
+  if(m.vid) inner += '<video class="gen-vid" src="'+m.vid+'" controls playsinline preload="metadata"></video>';
   let zipOnly = false;
   if(m.text){
     const st = codeStats(m.text);
     zipOnly = !streaming && useZipOnly(m, st);
     inner += md(m.text, zipOnly);
   }
-  else if(!m.gen) inner += typingHtml(m);
+  else if(!m.gen && !m.vid) inner += typingHtml(m);
   div.innerHTML = inner;
   div._blocks = _blocks.slice();
   if(zipOnly) div.appendChild(zipCardEl(div._blocks));
@@ -254,10 +260,10 @@ function updateAiMsg(div, m){
 function saveChats(){
   if(!save('lc_chats', CHATS)){
     // localStorage penuh: buang data gambar dari chat lama, coba lagi
-    CHATS.forEach((c,ci) => { if(ci < CHATS.length-1) c.messages.forEach(m => { delete m.img; delete m.gen; }); });
+    CHATS.forEach((c,ci) => { if(ci < CHATS.length-1) c.messages.forEach(m => { delete m.img; delete m.gen; delete m.vid; }); });
     if(!save('lc_chats', CHATS)){
       // masih penuh: buang juga dari chat aktif kecuali pesan terakhir
-      cur.messages.forEach((m,i) => { if(i < cur.messages.length-1){ delete m.img; delete m.gen; } });
+      cur.messages.forEach((m,i) => { if(i < cur.messages.length-1){ delete m.img; delete m.gen; delete m.vid; } });
       save('lc_chats', CHATS);
     }
   }
@@ -401,6 +407,50 @@ async function editImage(file, prompt){
   finally{ streaming = false; aborter = null; setStopUI(false); updateAiMsg(div, ai); maybeScroll(); saveChats(); }
 }
 
+/* ---------- Video: buat & animasi ---------- */
+async function genVideo(prompt){
+  const ai = { role:'ai', text:'', vid:null, _user:prompt };
+  cur.messages.push(ai);
+  const div = renderMsg(ai, cur.messages.length-1);
+  msgsEl.appendChild(div);
+  startStatusTimer(div, ai);
+  $('#emptyState').style.display = 'none';
+  streaming = true; aborter = new AbortController(); setStopUI(true);
+  try{
+    const r = await fetch('/api/video/generate', {
+      method:'POST', signal:aborter.signal, headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt })
+    });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.error || ('Server '+r.status));
+    if(j.url) ai.vid = j.url;
+    else throw new Error('Respons video tidak dikenal.');
+    ai.text = '';
+  }catch(e){ ai.text = e.name === 'AbortError' ? 'Dibatalkan.' : 'Gagal membuat video: ' + e.message; }
+  finally{ streaming = false; aborter = null; setStopUI(false); updateAiMsg(div, ai); maybeScroll(); saveChats(); }
+}
+async function animVideo(file, prompt){
+  const ai = { role:'ai', text:'', vid:null, _user:prompt };
+  cur.messages.push(ai);
+  const div = renderMsg(ai, cur.messages.length-1);
+  msgsEl.appendChild(div);
+  startStatusTimer(div, ai);
+  $('#emptyState').style.display = 'none';
+  streaming = true; aborter = new AbortController(); setStopUI(true);
+  try{
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('prompt', prompt);
+    const r = await fetch('/api/video/animate', { method:'POST', signal:aborter.signal, body:fd });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.error || ('Server '+r.status));
+    if(j.url) ai.vid = j.url;
+    else throw new Error('Respons video tidak dikenal.');
+    ai.text = '';
+  }catch(e){ ai.text = e.name === 'AbortError' ? 'Dibatalkan.' : 'Gagal menganimasikan gambar: ' + e.message; }
+  finally{ streaming = false; aborter = null; setStopUI(false); updateAiMsg(div, ai); maybeScroll(); saveChats(); }
+}
+
 /* ---------- Kirim utama ---------- */
 async function send(){
   if(streaming) return;
@@ -416,6 +466,18 @@ async function send(){
     pushUser(text, { img: imgData });
     const f = editImgFile; clearComposer();
     await editImage(f, text); return;
+  }
+  if(imgMode === 'videogen'){
+    if(!text) return;
+    pushUser(text); clearComposer();
+    await genVideo(text); return;
+  }
+  if(imgMode === 'videoanim'){
+    if(!text || !animImgFile) return;
+    const imgData = attach && attach.kind === 'image' ? attach.dataUrl : null;
+    pushUser(text, { img: imgData });
+    const f = animImgFile; clearComposer();
+    await animVideo(f, text); return;
   }
   if(!text && !attach) return;
   const um = { role:'user', text:text };
@@ -435,7 +497,7 @@ function pushUserObj(um){
 }
 function clearComposer(){
   inputEl.value = ''; autogrow();
-  attach = null; imgMode = null; editImgFile = null;
+  attach = null; imgMode = null; editImgFile = null; animImgFile = null;
   $('#attachBar').classList.add('hidden');
   $('#modeChip').classList.add('hidden');
 }
@@ -460,6 +522,8 @@ function setModeChip(){
   const chip = $('#modeChip');
   if(imgMode === 'generate'){ $('#modeChipText').textContent = 'Buat Gambar'; chip.classList.remove('hidden'); }
   else if(imgMode === 'edit'){ $('#modeChipText').textContent = 'Edit Gambar'; chip.classList.remove('hidden'); }
+  else if(imgMode === 'videogen'){ $('#modeChipText').textContent = 'Buat Video'; chip.classList.remove('hidden'); }
+  else if(imgMode === 'videoanim'){ $('#modeChipText').textContent = 'Animasi Gambar'; chip.classList.remove('hidden'); }
   else chip.classList.add('hidden');
   fitPill();
 }
@@ -693,8 +757,15 @@ async function handlePicked(kind, file){
     setModeChip(); setAttachPreview(); inputEl.focus();
     return;
   }
+  if(kind === 'animimg'){
+    if(!file.type.startsWith('image/')){ alert('Untuk Animasi Gambar, pilih file gambar.'); return; }
+    animImgFile = file; imgMode = 'videoanim';
+    attach = { kind:'image', dataUrl: await readFileAs('dataurl', file), name:file.name };
+    setModeChip(); setAttachPreview(); inputEl.focus();
+    return;
+  }
   // Pilihan baru (galeri/kamera/file) membatalkan mode edit gambar yang tertunda
-  editImgFile = null; if(imgMode === 'edit'){ imgMode = null; setModeChip(); }
+  editImgFile = null; animImgFile = null; if(imgMode === 'edit' || imgMode === 'videoanim'){ imgMode = null; setModeChip(); }
   if(file.type.startsWith('image/')){
     const du = await readFileAs('dataurl', file);
     attach = { kind:'image', dataUrl:du, name:file.name };
@@ -780,11 +851,14 @@ function bindEvents(){
     else if(k==='file'){ if(!needLogin('mengirim file')) return; $('#fileAny').click(); }
     else if(k==='generate'){ if(!needLogin('membuat gambar')) return; imgMode='generate'; setModeChip(); inputEl.placeholder='Deskripsikan gambar yang ingin dibuat...'; inputEl.focus(); }
     else if(k==='edit'){ if(!needLogin('mengedit gambar')) return; $('#fileEditImg').click(); }
+    else if(k==='videogen'){ if(!needLogin('membuat video')) return; imgMode='videogen'; setModeChip(); inputEl.placeholder='Deskripsikan video yang ingin dibuat...'; inputEl.focus(); }
+    else if(k==='videoanim'){ if(!needLogin('menganimasikan gambar')) return; $('#fileAnimImg').click(); }
   });
   $('#fileGallery').onchange = e => { handlePicked('img', e.target.files[0]); e.target.value=''; };
   $('#fileCamera').onchange = e => { handlePicked('img', e.target.files[0]); e.target.value=''; };
   $('#fileAny').onchange = e => { handlePicked('file', e.target.files[0]); e.target.value=''; };
   $('#fileEditImg').onchange = e => { handlePicked('editimg', e.target.files[0]); e.target.value=''; };
+  $('#fileAnimImg').onchange = e => { handlePicked('animimg', e.target.files[0]); e.target.value=''; };
   $('#fileWallpaper').onchange = async e => {
     const f = e.target.files[0]; e.target.value='';
     if(!f) return;
@@ -796,8 +870,8 @@ function bindEvents(){
   };
   $('#wpUploadBtn').onclick = () => $('#fileWallpaper').click();
 
-  $('#modeChipX').onclick = () => { imgMode=null; editImgFile=null; setModeChip(); inputEl.placeholder='Tulis pesan...'; };
-  $('#attachX').onclick = () => { attach=null; editImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
+  $('#modeChipX').onclick = () => { imgMode=null; editImgFile=null; animImgFile=null; setModeChip(); inputEl.placeholder='Tulis pesan...'; };
+  $('#attachX').onclick = () => { attach=null; editImgFile=null; animImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
 
   $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
   inputEl.addEventListener('input', autogrow);
