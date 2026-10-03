@@ -25,7 +25,7 @@ const IMAGE_SEED = process.env.IMAGE_SEED ? parseInt(process.env.IMAGE_SEED, 10)
 const IMAGE_STEPS = parseInt(process.env.IMAGE_STEPS || '4', 10);
 
 // ---------- Video (deapi.ai): text2video & img2video ----------
-const VIDEO_MODEL = (process.env.VIDEO_MODEL || 'Ltx2_19B_Dist_FP8').trim();
+const VIDEO_MODEL = (process.env.VIDEO_MODEL || 'Ltxv_13B_0_9_8_Distilled_FP8').trim();
 const VIDEO_GEN_URL = (process.env.VIDEO_GEN_URL || 'https://api.deapi.ai/api/v2/videos/generations').trim().replace(/\/$/, '');
 const VIDEO_ANIMATE_URL = (process.env.VIDEO_ANIMATE_URL || 'https://api.deapi.ai/api/v2/videos/animations').trim().replace(/\/$/, '');
 const VIDEO_WIDTH = parseInt(process.env.VIDEO_WIDTH || '768', 10);
