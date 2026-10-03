@@ -880,6 +880,7 @@ app.post('/api/video/animate', upload.single('image'), async (req, res) => {
       fd.append('seed', String(Math.floor(Math.random() * 1000000)));
       fd.append('frames', String(VIDEO_FRAMES));
       fd.append('fps', String(VIDEO_FPS));
+      fd.append('steps', '1');
       fd.append('first_frame_image', new Blob([req.file.buffer], { type: req.file.mimetype }), req.file.originalname || 'image.png');
       return await submitDeapiJob(key, VIDEO_ANIMATE_URL, fd, true);
     });
