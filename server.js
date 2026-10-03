@@ -31,7 +31,7 @@ const VIDEO_ANIMATE_URL = (process.env.VIDEO_ANIMATE_URL || 'https://api.deapi.a
 const VIDEO_WIDTH = parseInt(process.env.VIDEO_WIDTH || '768', 10);
 const VIDEO_HEIGHT = parseInt(process.env.VIDEO_HEIGHT || '512', 10);
 const VIDEO_FRAMES = parseInt(process.env.VIDEO_FRAMES || '120', 10);
-const VIDEO_FPS = parseInt(process.env.VIDEO_FPS || '24', 10);
+const VIDEO_FPS = parseInt(process.env.VIDEO_FPS || '30', 10);
 
 function parseModelEnv(i) {
   const raw = process.env['TEXT_MODEL_' + i];
