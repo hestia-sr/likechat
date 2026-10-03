@@ -28,8 +28,8 @@ const IMAGE_STEPS = parseInt(process.env.IMAGE_STEPS || '4', 10);
 const VIDEO_MODEL = (process.env.VIDEO_MODEL || 'Ltx2_5_22B_Dist_INT8').trim();
 const VIDEO_GEN_URL = (process.env.VIDEO_GEN_URL || 'https://api.deapi.ai/api/v2/videos/generations').trim().replace(/\/$/, '');
 const VIDEO_ANIMATE_URL = (process.env.VIDEO_ANIMATE_URL || 'https://api.deapi.ai/api/v2/videos/animations').trim().replace(/\/$/, '');
-const VIDEO_WIDTH = parseInt(process.env.VIDEO_WIDTH || '768', 10);
-const VIDEO_HEIGHT = parseInt(process.env.VIDEO_HEIGHT || '512', 10);
+const VIDEO_WIDTH = parseInt(process.env.VIDEO_WIDTH || '576', 10);
+const VIDEO_HEIGHT = parseInt(process.env.VIDEO_HEIGHT || '1024', 10);
 const VIDEO_FRAMES = parseInt(process.env.VIDEO_FRAMES || '120', 10);
 const VIDEO_FPS = parseInt(process.env.VIDEO_FPS || '24', 10);
 
