@@ -192,6 +192,12 @@ const _newModels = parseProviderScheme();
 if (_newModels.length) { TEXT_MODELS.length = 0; TEXT_MODELS.push(..._newModels); }
 
 app.use(express.json({ limit: '25mb' }));
+// www -> apex: jadikan likechat.work.gd domain utama
+app.use((req, res, next) => {
+  const host = String(req.headers.host || '').split(':')[0].toLowerCase();
+  if (host === 'www.likechat.work.gd') return res.redirect(301, 'https://likechat.work.gd' + req.originalUrl);
+  next();
+});
 // Jangan pernah sajikan file sensitif / internal lewat HTTP
 const BLOCKED_FILES = new Set(['.env', '.env.example', 'package.json', 'package-lock.json', 'server.js', 'render.yaml', 'SPEC.md']);
 app.use((req, res, next) => {
