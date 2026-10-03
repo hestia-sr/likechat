@@ -24,6 +24,15 @@ const IMAGE_HEIGHT = parseInt(process.env.IMAGE_HEIGHT || '1360', 10);
 const IMAGE_SEED = process.env.IMAGE_SEED ? parseInt(process.env.IMAGE_SEED, 10) : undefined;
 const IMAGE_STEPS = parseInt(process.env.IMAGE_STEPS || '4', 10);
 
+// ---------- Video (deapi.ai): text2video & img2video ----------
+const VIDEO_MODEL = (process.env.VIDEO_MODEL || 'Ltx2_19B_Dist_FP8').trim();
+const VIDEO_GEN_URL = (process.env.VIDEO_GEN_URL || 'https://api.deapi.ai/api/v2/videos/generations').trim().replace(/\/$/, '');
+const VIDEO_ANIMATE_URL = (process.env.VIDEO_ANIMATE_URL || 'https://api.deapi.ai/api/v2/videos/animations').trim().replace(/\/$/, '');
+const VIDEO_WIDTH = parseInt(process.env.VIDEO_WIDTH || '768', 10);
+const VIDEO_HEIGHT = parseInt(process.env.VIDEO_HEIGHT || '512', 10);
+const VIDEO_FRAMES = parseInt(process.env.VIDEO_FRAMES || '120', 10);
+const VIDEO_FPS = parseInt(process.env.VIDEO_FPS || '24', 10);
+
 function parseModelEnv(i) {
   const raw = process.env['TEXT_MODEL_' + i];
   if (!raw) return null;
@@ -835,4 +844,50 @@ app.post('/api/image/edit', upload.single('image'), async (req, res) => {
 });
 
 app.listen(PORT, () => console.log('LikeChat jalan di http://localhost:' + PORT));
+
+// ---------- Buat video (text2video) ----------
+app.post('/api/video/generate', async (req, res) => {
+  if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk membuat video.' });
+  const { prompt } = req.body || {};
+  if (!prompt || !String(prompt).trim()) return res.status(400).json({ error: 'prompt kosong' });
+  try {
+    const url = await tryKeys(IMAGE_KEYS, async (key) => {
+      const body = {
+        model: VIDEO_MODEL, prompt: String(prompt),
+        width: VIDEO_WIDTH, height: VIDEO_HEIGHT,
+        seed: Math.floor(Math.random() * 1000000),
+        frames: VIDEO_FRAMES, fps: VIDEO_FPS,
+      };
+      return await submitDeapiJob(key, VIDEO_GEN_URL, JSON.stringify(body), false);
+    });
+    res.json({ url });
+  } catch (e) {
+    res.status(e.status || 500).json({ error: (e.error || e.message || 'tidak dikenal') });
+  }
+});
+
+// ---------- Animasi gambar (img2video) ----------
+app.post('/api/video/animate', upload.single('image'), async (req, res) => {
+  if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk menganimasikan gambar.' });
+  const prompt = req.body && req.body.prompt;
+  if (!req.file) return res.status(400).json({ error: 'gambar tidak ada' });
+  if (!prompt || !String(prompt).trim()) return res.status(400).json({ error: 'prompt kosong' });
+  try {
+    const url = await tryKeys(IMAGE_KEYS, async (key) => {
+      const fd = new FormData();
+      fd.append('model', VIDEO_MODEL);
+      fd.append('prompt', String(prompt));
+      fd.append('width', String(VIDEO_WIDTH));
+      fd.append('height', String(VIDEO_HEIGHT));
+      fd.append('seed', String(Math.floor(Math.random() * 1000000)));
+      fd.append('frames', String(VIDEO_FRAMES));
+      fd.append('fps', String(VIDEO_FPS));
+      fd.append('first_frame_image', new Blob([req.file.buffer], { type: req.file.mimetype }), req.file.originalname || 'image.png');
+      return await submitDeapiJob(key, VIDEO_ANIMATE_URL, fd, true);
+    });
+    res.json({ url });
+  } catch (e) {
+    res.status(e.status || 500).json({ error: (e.error || e.message || 'tidak dikenal') });
+  }
+});
 // redeploy: pastikan logo baru ikut ter-deploy
