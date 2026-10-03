@@ -477,9 +477,20 @@ async function tryKeys(keys, fn) {
 function cleanUpstreamText(text) {
   // Penyedia kadang mengembalikan halaman error HTML (mis. 502 gateway);
   // jangan tampilkan mentah ke pengguna.
-  const t = (text || '').slice(0, 500);
+  const t = (text || '').slice(0, 2000);
   if (/^\s*</.test(t)) return 'penyedia sedang bermasalah (halaman error, bukan JSON)';
-  return t;
+  // Error JSON mentah (mis. {"error":{"message":"...","type":"...","code":"..."}})
+  // jangan dibuang mentah ke chat — ambil isi pesannya saja, tanpa request id dsb.
+  const m = t.match(/\{[\s\S]*\}/);
+  if (m) {
+    try {
+      const j = JSON.parse(m[0]);
+      const msg = (j && j.error && (j.error.message || j.error.msg)) || j.message || j.msg || '';
+      const clean = String(msg || '').replace(/\(request id:[^)]*\)/gi, '').replace(/request id:\s*[A-Za-z0-9_-]+/gi, '').trim();
+      return (clean || 'penyedia mengembalikan error').slice(0, 300);
+    } catch (e) { /* bukan JSON valid, tampilkan teks biasa */ }
+  }
+  return t.slice(0, 500);
 }
 function upstreamError(status, text) {
   const err = new Error('Upstream error ' + status);
