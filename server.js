@@ -182,7 +182,7 @@ function parseProviderScheme() {
       if (sep < 0) { label = raw.trim(); id = raw.trim(); }
       else { label = raw.slice(0, sep).trim(); id = raw.slice(sep + 1).trim(); }
       if (!id) continue;
-      const entry = { label: label || id, id };
+      const entry = { label: label || id, id, provider: p };
       if (baseUrl) entry.baseUrl = baseUrl;
       if (keys.length) entry.keys = keys;
       models.push(entry);
@@ -710,7 +710,13 @@ app.post('/api/chat', async (req, res) => {
         const ctl = new AbortController();
         const totalTimer = setTimeout(() => ctl.abort(), 600000);
         let firstByteTimedOut = false;
-        const firstByteTimer = setTimeout(() => { firstByteTimedOut = true; ctl.abort(); }, TEXT_FIRST_BYTE_TIMEOUT * 1000);
+        // Timeout per provider: timeout_<provider> (detik), mis. timeout_tnt=30. Kalau tidak ada, pakai global.
+        let fbTimeout = TEXT_FIRST_BYTE_TIMEOUT;
+        if (entry && entry.provider) {
+          const pv = parseFloat(process.env['timeout_' + entry.provider]);
+          if (Number.isFinite(pv) && pv > 0) fbTimeout = pv;
+        }
+        const firstByteTimer = setTimeout(() => { firstByteTimedOut = true; ctl.abort(); }, fbTimeout * 1000);
         try {
           const payload = { model: useModel, messages: outMessages, stream: true };
           if (temp !== null && temp !== undefined) payload.temperature = temp;
@@ -725,7 +731,7 @@ app.post('/api/chat', async (req, res) => {
           return r;
         } catch (e) {
           if (e && e.name === 'AbortError' && firstByteTimedOut) {
-            throw new Error('API tidak merespons dalam ' + TEXT_FIRST_BYTE_TIMEOUT + ' detik (key ' + keyNo + ')');
+            throw new Error('API tidak merespons dalam ' + fbTimeout + ' detik (key ' + keyNo + ')');
           }
           throw e;
         } finally { clearTimeout(totalTimer); clearTimeout(firstByteTimer); }
