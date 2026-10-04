@@ -721,6 +721,9 @@ app.post('/api/chat', async (req, res) => {
         try {
           const payload = { model: useModel, messages: outMessages, stream: true };
           if (temp !== null && temp !== undefined) payload.temperature = temp;
+          // Batas output: dari env MAX_TOKENS, default 8000 biar jawaban panjang tidak kepotong provider.
+          const mt = parseInt(process.env.MAX_TOKENS || '8000', 10);
+          if (Number.isFinite(mt) && mt > 0) payload.max_tokens = mt;
           console.log('[chat] key ' + keyNo + '/' + keys.length + ' -> ' + useModel);
           const r = await fetch(baseUrl + '/chat/completions', {
             method: 'POST',
