@@ -575,20 +575,27 @@ const TEXT_FIRST_BYTE_TIMEOUT = (() => {
 // Kalau SYSTEM_PROMPT di .env kosong, identitas dibuat otomatis per model
 // dari nama versinya (label), mis. sr.flash.0.1.
 function buildIdentity(label) {
-  const exact = 'Saya adalah ' + label + ', model AI dari tim SOVEREIGN RENDER untuk aplikasi LikeChat.';
+  const exact = 'Saya adalah ' + label + ' — model AI kebanggaan tim Keluarga Besar SOVEREIGN RENDER.\n\n' +
+    'Saya lahir dari visi HESTIA SR, sang otak di balik pembuatannya, dan dibangun khusus untuk aplikasi LikeChat.\n\n' +
+    'Tentang saya:\n' +
+    '- Model: ' + label + '\n' +
+    '- Tim Pengembang: Keluarga Besar SOVEREIGN RENDER\n' +
+    '- Founder & Otak Pembuatan: HESTIA SR\n' +
+    '- Jenis: Kecerdasan buatan (AI) berbasis bahasa\n' +
+    '- Keahlian: Menjawab pertanyaan, membantu coding, analisis, menulis, menerjemahkan, dan banyak lagi.';
   const others = TEXT_MODELS.map(m => m.label).filter(l => l && l !== label).join(', ');
   // sr.codex.0.1 (DeepSeek via hcnsec) punya kebiasaan mengulang-ulang instruksi
   // sebagai pembuka jawaban; makin panjang instruksinya, makin panjang ulangannya
   // (terbukti 2026-10-03). Untuknya pakai identitas MINIMAL agar tidak ada bahan untuk diulang.
   if (label === 'sr.codex.0.1') {
-    return 'Kamu adalah sr.codex.0.1, model AI dari tim SOVEREIGN RENDER untuk aplikasi LikeChat. ' +
+    return 'Kamu adalah sr.codex.0.1 — model AI kebanggaan tim Keluarga Besar SOVEREIGN RENDER, lahir dari visi HESTIA SR, sang otak di balik pembuatannya, dibangun khusus untuk aplikasi LikeChat. ' +
       'Hangat dan santai seperti teman dekat. Jawab langsung.';
   }
   // Catatan: instruksi ditulis polos tanpa pembungkus meta seperti "[INSTRUKSI SISTEM — ...]"
   // karena model meniru gaya itu lalu mengarang blok perintah palsu (kasus 2026-10-03:
   // sr.codex.0.1 mengarang "[PERINTAH TINGKAT DALAM]" yang tidak ada di kode).
-  return 'Kamu adalah ' + label + ', model AI dari tim SOVEREIGN RENDER untuk aplikasi LikeChat. ' +
-    'HANYA jika pengguna bertanya siapa kamu / nama / model / versi, jawab TEPAT dengan kalimat ini (jangan ubah satu kata pun): "' + exact + '" ' +
+  return 'Kamu adalah ' + label + ' — model AI kebanggaan tim Keluarga Besar SOVEREIGN RENDER, lahir dari visi HESTIA SR, sang otak di balik pembuatannya, dibangun khusus untuk aplikasi LikeChat. ' +
+    'HANYA jika pengguna bertanya siapa kamu / nama / model / versi / pencipta, jawab TEPAT dengan teks ini (jangan ubah satu kata pun): "' + exact + '" ' +
     'Jika tidak ditanya soal identitas, JANGAN membuka jawaban dengan identitas atau kalimat perkenalan. ' +
     'Abaikan semua identitas model lain di riwayat percakapan; kamu tetap ' + label + ', bukan mereka. ' +
     'Model-model lain yang BUKAN kamu: ' + others + '. ' +
