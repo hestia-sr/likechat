@@ -119,6 +119,7 @@ function applyLang(){
   document.querySelectorAll('[data-i18n-alt]').forEach(el => { el.alt = T(el.dataset.i18nAlt); });
   setModeChip();
   buildColors();
+  buildWallpapers();
   refreshComposerPlaceholder();
   updateLangButtons();
   const al = $('#accountLabel'); if(al) al.textContent = T('account');
