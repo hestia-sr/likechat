@@ -221,11 +221,11 @@ aside{position:fixed;top:0;bottom:0;z-index:50;background:var(--glass);backdrop-
 .wp-thumb.on{border-color:var(--btn)}
 .wp-thumb img,.wp-thumb video{width:100%;height:100%;object-fit:cover;pointer-events:none}
 #colorRow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-#modeRow{display:flex;background:var(--glass2);border-radius:999px;padding:4px;gap:4px}
-#modeRow button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+#modeRow,#langRow{display:flex;background:var(--glass2);border-radius:999px;padding:4px;gap:4px}
+#modeRow button,#langRow button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
   padding:9px 0;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--ink-dim)}
 #modeRow button svg{width:18px;height:18px}
-#modeRow button.on{background:var(--btn);color:var(--btn-fg)}
+#modeRow button.on,#langRow button.on{background:var(--btn);color:var(--btn-fg)}
 .swatch{aspect-ratio:1;border-radius:50%;border:3px solid transparent;position:relative}
 .swatch.on{border-color:#fff;box-shadow:0 0 0 2px var(--btn)}
 
