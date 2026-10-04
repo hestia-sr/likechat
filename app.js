@@ -679,7 +679,7 @@ function buildModelMenu(){
     const b = document.createElement('button');
     b.className = m.id===SET.model ? 'on' : '';
     b.innerHTML = '<span>'+esc(m.label)+'</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-    b.onclick = () => { SET.model = m.id; save('lc_set', SET); buildModelMenu(); menu.classList.add('hidden'); };
+    b.onclick = () => { SET.model = m.id; save('lc_set', SET); buildModelMenu(); menu.classList.add('hidden'); if(imgMode){ imgMode = null; editImgFile = null; animImgFile = null; setModeChip(); inputEl.placeholder = 'Tulis pesan...'; } };
     menu.appendChild(b);
   });
 }
