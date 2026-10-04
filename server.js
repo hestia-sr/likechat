@@ -131,17 +131,19 @@ function censorBlockedWords(text){
 // ---------- Batasan akses tamu (belum login Google) ----------
 // Tamu hanya boleh memakai 1 model chat dan tidak bisa buat/edit gambar.
 // Berlaku hanya bila login Google aktif (GOOGLE_ON); kalau tidak, bebas.
-const GUEST_MODEL_ENTRY = (() => {
+const GUEST_MODEL_LABEL = 'sr.0.1-turtle';
+function getGuestModelEntry() {
   const env = (process.env.GUEST_MODEL || '').trim();
   if (env) {
     const f = TEXT_MODELS.find(m => m.id === env || m.label === env);
     if (f) return f;
   }
-  return TEXT_MODELS.find(m => m.label === 'sr.0.1-turtle') || TEXT_MODELS[0];
-})();
+  return TEXT_MODELS.find(m => m.label === GUEST_MODEL_LABEL) || TEXT_MODELS[0];
+}
 function modelsFor(req) {
   if (!GOOGLE_ON || req.user) return TEXT_MODELS;
-  return [GUEST_MODEL_ENTRY];
+  const g = getGuestModelEntry();
+  return g ? [g] : [];
 }
 function guestBlocked(req) {
   return GOOGLE_ON && !req.user;
