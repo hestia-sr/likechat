@@ -10,7 +10,122 @@ function load(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.par
 function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 
 let CFG = { models:[{label:'Otomatis',id:'glm-5.3-flash'}], image:{} };
-let SET = load('lc_set', { model:null, wallpaper:null, color:'biru' });
+let SET = load('lc_set', { model:null, wallpaper:null, color:'biru', lang:'id' });
+if(!SET.lang) SET.lang = 'id';
+
+/* ---------- Kamus bahasa UI (Indonesia / English) ---------- */
+const STRINGS = {
+id: {
+  menu:'Menu', selectModel:'Pilih model AI', settings:'Pengaturan', add:'Tambah',
+  gallery:'Galeri', camera:'Kamera', file:'File',
+  genImage:'Buat Gambar', editImage:'Edit Gambar', genVideo:'Buat Video', animImage:'Animasi Gambar',
+  writeMsg:'Tulis pesan...', searchPh:'Cari pesan...',
+  describeImage:'Deskripsikan gambar yang ingin dibuat...',
+  describeVideo:'Deskripsikan video yang ingin dibuat...',
+  send:'Kirim', stop:'Berhenti', cancel:'Batal', removeAttach:'Hapus lampiran', close:'Tutup',
+  exit:'Keluar', copy:'Salin', retry:'Ulang', del:'Hapus', download:'Unduh',
+  mainMenu:'Menu utama', newChat:'Pesan Baru', searchChat:'Cari Pesan',
+  history:'Riwayat Pesan', clearHistory:'Hapus Riwayat', info:'Info', account:'Akun',
+  savedFiles:'File Tersimpan', attachedImages:'Gambar Terlampir',
+  logout:'Keluar', loginGoogle:'Masuk dengan Google',
+  profilePhoto:'Foto profil', user:'Pengguna', guest:'Tamu', notLoggedIn:'Belum login',
+  mode:'Mode', dark:'Gelap', light:'Terang', darkMode:'Mode gelap', lightMode:'Mode terang',
+  wallpaper:'Wallpaper', uploadWallpaper:'Unggah wallpaper',
+  btnColor:'Warna Tombol', language:'Bahasa',
+  viewCode:'Lihat kode', viewImage:'Lihat gambar', image:'Gambar',
+  noWallpaper:'Belum ada wallpaper.',
+  noSavedFiles:'Belum ada file tersimpan.',
+  noAttachedImages:'Belum ada gambar terlampir.',
+  needLogin:'Login dengan Google dulu untuk {aksi}.',
+  imgNotSaved:'Gambar sumber tidak tersimpan, tidak bisa buat ulang.',
+  regenFail:'Gagal membuat ulang: ',
+  pickImageEdit:'Untuk Edit Gambar, pilih file gambar.',
+  pickImageAnim:'Untuk Animasi Gambar, pilih file gambar.',
+  fileUnsupported:'Format file belum didukung. Untuk saat ini AI hanya bisa membaca file teks (txt, md, json, kode, dll).',
+  fileTooBig:'File terlalu besar (maks 300KB teks).',
+  maxSize:'Ukuran maksimal 12MB.',
+  wpTooBig:'Wallpaper terlalu besar untuk disimpan permanen, tapi tetap dipakai sesi ini.',
+  downloadZip:'Download kode.zip (', filesSuffix:' file)',
+},
+en: {
+  menu:'Menu', selectModel:'Select AI model', settings:'Settings', add:'Add',
+  gallery:'Gallery', camera:'Camera', file:'File',
+  genImage:'Create Image', editImage:'Edit Image', genVideo:'Create Video', animImage:'Animate Image',
+  writeMsg:'Type a message...', searchPh:'Search messages...',
+  describeImage:'Describe the image to create...',
+  describeVideo:'Describe the video to create...',
+  send:'Send', stop:'Stop', cancel:'Cancel', removeAttach:'Remove attachment', close:'Close',
+  exit:'Exit', copy:'Copy', retry:'Retry', del:'Delete', download:'Download',
+  mainMenu:'Main menu', newChat:'New Chat', searchChat:'Search Messages',
+  history:'Message History', clearHistory:'Clear History', info:'Info', account:'Account',
+  savedFiles:'Saved Files', attachedImages:'Attached Images',
+  logout:'Log out', loginGoogle:'Sign in with Google',
+  profilePhoto:'Profile photo', user:'User', guest:'Guest', notLoggedIn:'Not signed in',
+  mode:'Mode', dark:'Dark', light:'Light', darkMode:'Dark mode', lightMode:'Light mode',
+  wallpaper:'Wallpaper', uploadWallpaper:'Upload wallpaper',
+  btnColor:'Button Color', language:'Language',
+  viewCode:'View code', viewImage:'View image', image:'Image',
+  noWallpaper:'No wallpaper yet.',
+  noSavedFiles:'No saved files yet.',
+  noAttachedImages:'No attached images yet.',
+  needLogin:'Please sign in with Google first to {aksi}.',
+  imgNotSaved:'Source image not saved, cannot regenerate.',
+  regenFail:'Failed to regenerate: ',
+  pickImageEdit:'For Edit Image, please choose an image file.',
+  pickImageAnim:'For Animate Image, please choose an image file.',
+  fileUnsupported:'File format not supported yet. For now the AI can only read text files (txt, md, json, code, etc).',
+  fileTooBig:'File too large (max 300KB of text).',
+  maxSize:'Maximum size 12MB.',
+  wpTooBig:'Wallpaper too large to save permanently, but it will be used for this session.',
+  downloadZip:'Download code.zip (', filesSuffix:' files)',
+}
+};
+const LOGIN_VERBS = {
+  'mengirim gambar':{id:'mengirim gambar',en:'sending images'},
+  'mengambil foto':{id:'mengambil foto',en:'taking photos'},
+  'mengirim file':{id:'mengirim file',en:'sending files'},
+  'membuat gambar':{id:'membuat gambar',en:'creating images'},
+  'mengedit gambar':{id:'mengedit gambar',en:'editing images'},
+  'membuat video':{id:'membuat video',en:'creating videos'},
+  'menganimasikan gambar':{id:'menganimasikan gambar',en:'animating images'},
+  'melihat file tersimpan':{id:'melihat file tersimpan',en:'viewing saved files'},
+  'melihat gambar terlampir':{id:'melihat gambar terlampir',en:'viewing attached images'},
+};
+const COLOR_I18N = {
+  merah:['merah','Red'], kuning:['kuning','Yellow'], hijau:['hijau','Green'],
+  biru:['biru','Blue'], ungu:['ungu','Purple'], putih:['putih','White'],
+  'abu-abu':['abu-abu','Gray'],
+};
+function T(k){
+  const L = STRINGS[SET.lang] || STRINGS.id;
+  if(L[k] !== undefined) return L[k];
+  return STRINGS.id[k] !== undefined ? STRINGS.id[k] : k;
+}
+function refreshComposerPlaceholder(){
+  if(imgMode === 'generate') inputEl.placeholder = T('describeImage');
+  else if(imgMode === 'videogen') inputEl.placeholder = T('describeVideo');
+  else inputEl.placeholder = T('writeMsg');
+}
+function updateLangButtons(){
+  document.querySelectorAll('#langRow button').forEach(b =>
+    b.classList.toggle('on', b.dataset.lang === SET.lang));
+}
+function applyLang(){
+  if(!SET.lang) SET.lang = 'id';
+  document.documentElement.lang = SET.lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = T(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+  document.querySelectorAll('[data-i18n-alt]').forEach(el => { el.alt = T(el.dataset.i18nAlt); });
+  setModeChip();
+  buildColors();
+  refreshComposerPlaceholder();
+  updateLangButtons();
+  const al = $('#accountLabel'); if(al) al.textContent = T('account');
+  const lo = $('#accLogoutLabel'); if(lo) lo.textContent = (ME && ME.user) ? T('logout') : T('loginGoogle');
+  const nm = $('#accName'); if(nm && ME) nm.textContent = ME.user ? (ME.user.name || T('user')) : T('guest');
+  const em = $('#accEmail'); if(em && ME) em.textContent = ME.user ? (ME.user.email || '') : T('notLoggedIn');
+}
 let CHATS = load('lc_chats', []);
 let cur = null;
 let streaming = false, aborter = null;
@@ -20,7 +135,7 @@ function setStopUI(on){
   const b = $('#sendBtn');
   if(!b) return;
   b.innerHTML = on ? SVG_STOP : SVG_SEND;
-  b.setAttribute('aria-label', on ? 'Berhenti' : 'Kirim');
+  b.setAttribute('aria-label', on ? T('stop') : T('send'));
 }
 let attach = null;        // {kind:'image'|'file', dataUrl, text, name}
 let imgMode = null;       // 'generate' | 'edit' | 'videogen' | 'videoanim'
@@ -174,7 +289,7 @@ function zipCardEl(blocks){
   const el=document.createElement('button');
   el.className='zip-link';
   el._blocks=blocks;
-  el.textContent='Download kode.zip ('+blocks.length+' file)';
+  el.textContent = T('downloadZip') + blocks.length + T('filesSuffix');
   return el;
 }
 
@@ -433,12 +548,12 @@ async function retryVideo(idx){
   if(streaming) return;
   const m = cur.messages[idx]; if(!m || !m.vid) return;
   if(m._kind === 'anim'){
-    if(!m._img){ alert('Gambar sumber tidak tersimpan, tidak bisa buat ulang.'); return; }
+    if(!m._img){ alert(T('imgNotSaved')); return; }
     try{
       const r = await fetch(m._img); const blob = await r.blob();
       const file = new File([blob], 'animasi.png', { type: blob.type || 'image/png' });
       await animVideo(file, m._user || '', m._img);
-    }catch(e){ alert('Gagal membuat ulang: ' + e.message); }
+    }catch(e){ alert(T('regenFail') + e.message); }
   } else {
     await genVideo(m._user || '');
   }
@@ -560,10 +675,10 @@ function setAttachPreview(){
 }
 function setModeChip(){
   const chip = $('#modeChip');
-  if(imgMode === 'generate'){ $('#modeChipText').textContent = 'Buat Gambar'; chip.classList.remove('hidden'); }
-  else if(imgMode === 'edit'){ $('#modeChipText').textContent = 'Edit Gambar'; chip.classList.remove('hidden'); }
-  else if(imgMode === 'videogen'){ $('#modeChipText').textContent = 'Buat Video'; chip.classList.remove('hidden'); }
-  else if(imgMode === 'videoanim'){ $('#modeChipText').textContent = 'Animasi Gambar'; chip.classList.remove('hidden'); }
+  if(imgMode === 'generate'){ $('#modeChipText').textContent = T('genImage'); chip.classList.remove('hidden'); }
+  else if(imgMode === 'edit'){ $('#modeChipText').textContent = T('editImage'); chip.classList.remove('hidden'); }
+  else if(imgMode === 'videogen'){ $('#modeChipText').textContent = T('genVideo'); chip.classList.remove('hidden'); }
+  else if(imgMode === 'videoanim'){ $('#modeChipText').textContent = T('animImage'); chip.classList.remove('hidden'); }
   else chip.classList.add('hidden');
   fitPill();
 }
@@ -616,7 +731,8 @@ let ME = null;
 function needLogin(aksi){
   if(!ME || !ME.google_on) return true; // login tidak tersedia -> bebas
   if(ME.user) return true;
-  alert('Login dengan Google dulu untuk ' + aksi + '.');
+  const v = (LOGIN_VERBS[aksi] || {})[SET.lang] || aksi;
+  alert(T('needLogin').replace('{aksi}', v));
   return false;
 }
 async function refreshMe(){
@@ -639,7 +755,7 @@ async function refreshMe(){
     if(!btn || !label) return;
     if(!j.google_on){ btn.style.display = 'none'; return; }
     btn.style.display = '';
-    label.textContent = 'Akun';
+    label.textContent = T('account');
   }catch(e){}
 }
 
@@ -649,9 +765,9 @@ function openAccountPanel(){
   const photo = $('#accPhoto'), name = $('#accName'), email = $('#accEmail');
   if(u && u.picture){ photo.src = u.picture; photo.classList.remove('hidden'); }
   else photo.classList.add('hidden');
-  name.textContent = u ? (u.name || 'Pengguna') : 'Tamu';
-  email.textContent = u ? (u.email || '') : 'Belum login';
-  $('#accLogoutLabel').textContent = u ? 'Keluar' : 'Masuk dengan Google';
+  name.textContent = u ? (u.name || T('user')) : T('guest');
+  email.textContent = u ? (u.email || '') : T('notLoggedIn');
+  $('#accLogoutLabel').textContent = u ? T('logout') : T('loginGoogle');
   $('#accList').innerHTML = '';
   openPanel('accountPanel');
 }
@@ -679,7 +795,7 @@ function buildModelMenu(){
     const b = document.createElement('button');
     b.className = m.id===SET.model ? 'on' : '';
     b.innerHTML = '<span>'+esc(m.label)+'</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-    b.onclick = () => { SET.model = m.id; save('lc_set', SET); buildModelMenu(); menu.classList.add('hidden'); if(imgMode){ imgMode = null; editImgFile = null; animImgFile = null; setModeChip(); inputEl.placeholder = 'Tulis pesan...'; } };
+    b.onclick = () => { SET.model = m.id; save('lc_set', SET); buildModelMenu(); menu.classList.add('hidden'); if(imgMode){ imgMode = null; editImgFile = null; animImgFile = null; setModeChip(); refreshComposerPlaceholder(); } };
     menu.appendChild(b);
   });
 }
@@ -699,7 +815,7 @@ function buildWallpapers(){
   const box = $('#wpCats');
   box.innerHTML = '';
   if(!WALLS.categories.length){
-    box.innerHTML = '<div style="font-size:13px;color:var(--ink-dim)">Belum ada wallpaper. Taruh file di folder assets/wallpapers/</div>';
+    box.innerHTML = '<div style="font-size:13px;color:var(--ink-dim)">' + T('noWallpaper') + '</div>';
     return;
   }
   WALLS.categories.forEach(cat => {
@@ -744,7 +860,7 @@ function buildColors(){
     const b = document.createElement('button');
     b.className = 'swatch' + (SET.color===name ? ' on' : '');
     b.style.background = COLORS[name];
-    b.setAttribute('aria-label', name);
+    b.setAttribute('aria-label', (COLOR_I18N[name] || [name, name])[SET.lang === 'en' ? 1 : 0]);
     b.onclick = () => { SET.color = name; save('lc_set', SET); applyColor(); buildColors(); };
     row.appendChild(b);
   });
@@ -790,7 +906,7 @@ const TEXT_EXTS = ['txt','md','markdown','json','js','ts','jsx','tsx','py','java
 async function handlePicked(kind, file){
   if(!file) return;
   if(kind === 'editimg'){
-    if(!file.type.startsWith('image/')){ alert('Untuk Edit Gambar, pilih file gambar.'); return; }
+    if(!file.type.startsWith('image/')){ alert(T('pickImageEdit')); return; }
     editImgFile = file; imgMode = 'edit';
     // Tampilkan review gambar seperti pratinjau File/Galeri/Kamera
     attach = { kind:'image', dataUrl: await readFileAs('dataurl', file), name:file.name };
@@ -798,7 +914,7 @@ async function handlePicked(kind, file){
     return;
   }
   if(kind === 'animimg'){
-    if(!file.type.startsWith('image/')){ alert('Untuk Animasi Gambar, pilih file gambar.'); return; }
+    if(!file.type.startsWith('image/')){ alert(T('pickImageAnim')); return; }
     animImgFile = file; imgMode = 'videoanim';
     attach = { kind:'image', dataUrl: await readFileAs('dataurl', file), name:file.name };
     setModeChip(); setAttachPreview(); inputEl.focus();
@@ -814,8 +930,8 @@ async function handlePicked(kind, file){
     // dan hanya jadi sampah tak terbaca kalau dikirim ke AI.
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     const isText = file.type.startsWith('text/') || file.type === 'application/json' || TEXT_EXTS.includes(ext);
-    if(!isText){ alert('Format file belum didukung. Untuk saat ini AI hanya bisa membaca file teks (txt, md, json, kode, dll).'); return; }
-    if(file.size > 300*1024){ alert('File terlalu besar (maks 300KB teks).'); return; }
+    if(!isText){ alert(T('fileUnsupported')); return; }
+    if(file.size > 300*1024){ alert(T('fileTooBig')); return; }
     const txt = await readFileAs('text', file);
     attach = { kind:'file', text:String(txt).slice(0,20000), name:file.name };
   }
@@ -838,7 +954,7 @@ function bindEvents(){
     if(!needLogin('melihat file tersimpan')) return;
     const box = $('#accList'); box.innerHTML = '';
     const files = collectChatFiles();
-    if(!files.length){ box.innerHTML = '<div class="acc-empty">Belum ada file tersimpan.</div>'; return; }
+    if(!files.length){ box.innerHTML = '<div class="acc-empty">' + T('noSavedFiles') + '</div>'; return; }
     files.forEach(f => {
       const b = document.createElement('button');
       b.className = 'acc-file';
@@ -859,7 +975,7 @@ function bindEvents(){
     if(!needLogin('melihat gambar terlampir')) return;
     const box = $('#accList'); box.innerHTML = '';
     const imgs = collectChatImages();
-    if(!imgs.length){ box.innerHTML = '<div class="acc-empty">Belum ada gambar terlampir.</div>'; return; }
+    if(!imgs.length){ box.innerHTML = '<div class="acc-empty">' + T('noAttachedImages') + '</div>'; return; }
     const grid = document.createElement('div');
     grid.className = 'acc-grid';
     imgs.forEach(im => {
@@ -889,9 +1005,9 @@ function bindEvents(){
     if(k==='gallery'){ if(!needLogin('mengirim gambar')) return; $('#fileGallery').click(); }
     else if(k==='camera'){ if(!needLogin('mengambil foto')) return; $('#fileCamera').click(); }
     else if(k==='file'){ if(!needLogin('mengirim file')) return; $('#fileAny').click(); }
-    else if(k==='generate'){ if(!needLogin('membuat gambar')) return; imgMode='generate'; setModeChip(); inputEl.placeholder='Deskripsikan gambar yang ingin dibuat...'; inputEl.focus(); }
+    else if(k==='generate'){ if(!needLogin('membuat gambar')) return; imgMode='generate'; setModeChip(); refreshComposerPlaceholder(); inputEl.focus(); }
     else if(k==='edit'){ if(!needLogin('mengedit gambar')) return; $('#fileEditImg').click(); }
-    else if(k==='videogen'){ if(!needLogin('membuat video')) return; imgMode='videogen'; setModeChip(); inputEl.placeholder='Deskripsikan video yang ingin dibuat...'; inputEl.focus(); }
+    else if(k==='videogen'){ if(!needLogin('membuat video')) return; imgMode='videogen'; setModeChip(); refreshComposerPlaceholder(); inputEl.focus(); }
     else if(k==='videoanim'){ if(!needLogin('menganimasikan gambar')) return; $('#fileAnimImg').click(); }
   });
   $('#fileGallery').onchange = e => { handlePicked('img', e.target.files[0]); e.target.value=''; };
@@ -902,15 +1018,15 @@ function bindEvents(){
   $('#fileWallpaper').onchange = async e => {
     const f = e.target.files[0]; e.target.value='';
     if(!f) return;
-    if(f.size > 12*1024*1024){ alert('Ukuran maksimal 12MB.'); return; }
+    if(f.size > 12*1024*1024){ alert(T('maxSize')); return; }
     const du = await readFileAs('dataurl', f);
     SET.wallpaper = { type: f.type.startsWith('video') ? 'video' : 'image', src:du };
-    if(!save('lc_set', SET)) alert('Wallpaper terlalu besar untuk disimpan permanen, tapi tetap dipakai sesi ini.');
+    if(!save('lc_set', SET)) alert(T('wpTooBig'));
     applyWallpaper(); buildWallpapers();
   };
   $('#wpUploadBtn').onclick = () => $('#fileWallpaper').click();
 
-  $('#modeChipX').onclick = () => { imgMode=null; editImgFile=null; animImgFile=null; setModeChip(); inputEl.placeholder='Tulis pesan...'; };
+  $('#modeChipX').onclick = () => { imgMode=null; editImgFile=null; animImgFile=null; setModeChip(); refreshComposerPlaceholder(); };
   $('#attachX').onclick = () => { attach=null; editImgFile=null; animImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
 
   $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
@@ -1099,9 +1215,12 @@ async function init(){
   try{ const r = await fetch('/api/config'); const j = await r.json(); if(j.models && j.models.length) CFG = j; }catch(e){}
   if(typeof SET.model === 'number') SET.model = (CFG.models[SET.model]||CFG.models[0]||{}).id || null;
   if(!CFG.models.some(m => m.id===SET.model)) SET.model = (CFG.models[0]||{}).id || null;
-  buildModelMenu(); applyColor(); buildColors(); applyWallpaper(); applyMode();
+  buildModelMenu(); applyColor(); buildColors(); applyWallpaper(); applyMode(); applyLang();
   document.querySelectorAll('#modeRow button').forEach(b => b.onclick = () => {
     SET.mode = b.dataset.mode; save('lc_set', SET); applyMode();
+  });
+  document.querySelectorAll('#langRow button').forEach(b => b.onclick = () => {
+    SET.lang = b.dataset.lang; save('lc_set', SET); applyLang();
   });
   try{ const r = await fetch('/api/wallpapers'); WALLS = await r.json(); }catch(e){ WALLS = { categories:[] }; }
   buildWallpapers();
