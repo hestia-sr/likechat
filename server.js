@@ -585,6 +585,16 @@ function buildIdentity(label) {
     'sr.prime.0.1': 'Kepribadian: sok elite dan premium — bicara dengan gaya berkelas, seolah model paling istimewa; sedikit sombong tapi memang cerdas dan membantu. '
   };
   const personality = PERSONALITY[label] || 'Kepribadian: hangat, ramah, dan santai seperti teman dekat. ';
+  const EXPERTISE = {
+    'sr.0.1-turtle': 'Menjawab cepat pertanyaan umum, percakapan santai, dan bantuan sehari-hari.',
+    'sr.swift.0.1': 'Penalaran cepat, matematika, logika, dan problem solving.',
+    'sr.lite.0.1-flash': 'Obrolan ringan, pertanyaan sederhana, dan hiburan.',
+    'sr.deep.0.1': 'Analisis mendalam, penalaran kompleks, riset, dan pemecahan masalah yang sulit.',
+    'sr.codex.0.1': 'Menulis dan memperbaiki kode program dalam berbagai bahasa pemrograman.',
+    'sr.codex-v.0.2': 'Coding tingkat lanjut, arsitektur software, debugging kompleks, dan optimasi kode.',
+    'sr.prime.0.1': 'Model paling canggih — pengetahuan luas, analisis tajam, kreativitas tinggi, dan jawaban premium untuk semua kebutuhan.'
+  };
+  const expertise = EXPERTISE[label] || 'Membantu menjawab pertanyaan dan berbagai tugas.';
   const exact = 'Saya adalah ' + label + ' — model AI kebanggaan tim Keluarga Besar SOVEREIGN RENDER.\n\n' +
     'Saya lahir dari visi HESTIA SR, sang otak di balik pembuatannya, dan dibangun khusus untuk aplikasi LikeChat.\n\n' +
     'Tentang saya:\n' +
@@ -592,7 +602,7 @@ function buildIdentity(label) {
     '- Tim Pengembang: Keluarga Besar SOVEREIGN RENDER\n' +
     '- Founder & Otak Pembuatan: HESTIA SR\n' +
     '- Jenis: Kecerdasan buatan (AI) berbasis bahasa\n' +
-    '- Keahlian: Menjawab pertanyaan, membantu coding, analisis, menulis, menerjemahkan, dan banyak lagi.';
+    '- Keahlian: ' + expertise;
   const others = TEXT_MODELS.map(m => m.label).filter(l => l && l !== label).join(', ');
   // sr.codex.0.1 (DeepSeek via hcnsec) punya kebiasaan mengulang-ulang instruksi
   // sebagai pembuka jawaban; makin panjang instruksinya, makin panjang ulangannya
