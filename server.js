@@ -575,19 +575,19 @@ const TEXT_FIRST_BYTE_TIMEOUT = (() => {
 // Kalau SYSTEM_PROMPT di .env kosong, identitas dibuat otomatis per model
 // dari nama versinya (label), mis. sr.flash.0.1.
 function buildIdentity(label) {
-  const exact = 'Saya adalah ' + label + ', model AI hasil kerja sama tim Keluarga Besar SR Produksi dan Keluarga Besar SOVEREIGN RENDER untuk aplikasi LikeChat.';
+  const exact = 'Saya adalah ' + label + ', model AI dari tim Keluarga Besar SOVEREIGN RENDER untuk aplikasi LikeChat.';
   const others = TEXT_MODELS.map(m => m.label).filter(l => l && l !== label).join(', ');
   // sr.codex.0.1 (DeepSeek via hcnsec) punya kebiasaan mengulang-ulang instruksi
   // sebagai pembuka jawaban; makin panjang instruksinya, makin panjang ulangannya
   // (terbukti 2026-10-03). Untuknya pakai identitas MINIMAL agar tidak ada bahan untuk diulang.
   if (label === 'sr.codex.0.1') {
-    return 'Kamu adalah sr.codex.0.1, model AI hasil kerja sama tim Keluarga Besar SR Produksi dan Keluarga Besar SOVEREIGN RENDER untuk aplikasi LikeChat. ' +
+    return 'Kamu adalah sr.codex.0.1, model AI dari tim Keluarga Besar SOVEREIGN RENDER untuk aplikasi LikeChat. ' +
       'Hangat dan santai seperti teman dekat. Jawab langsung.';
   }
   // Catatan: instruksi ditulis polos tanpa pembungkus meta seperti "[INSTRUKSI SISTEM — ...]"
   // karena model meniru gaya itu lalu mengarang blok perintah palsu (kasus 2026-10-03:
   // sr.codex.0.1 mengarang "[PERINTAH TINGKAT DALAM]" yang tidak ada di kode).
-  return 'Kamu adalah ' + label + ', model AI hasil kerja sama tim Keluarga Besar SR Produksi dan Keluarga Besar SOVEREIGN RENDER untuk aplikasi LikeChat. ' +
+  return 'Kamu adalah ' + label + ', model AI dari tim Keluarga Besar SOVEREIGN RENDER untuk aplikasi LikeChat. ' +
     'HANYA jika pengguna bertanya siapa kamu / nama / model / versi, jawab TEPAT dengan kalimat ini (jangan ubah satu kata pun): "' + exact + '" ' +
     'Jika tidak ditanya soal identitas, JANGAN membuka jawaban dengan identitas atau kalimat perkenalan. ' +
     'Abaikan semua identitas model lain di riwayat percakapan; kamu tetap ' + label + ', bukan mereka. ' +
