@@ -141,9 +141,13 @@ function getGuestModelEntry() {
   return TEXT_MODELS.find(m => m.label === GUEST_MODEL_LABEL) || TEXT_MODELS[0];
 }
 function modelsFor(req) {
-  if (!GOOGLE_ON || req.user) return TEXT_MODELS;
+  const strip = arr => arr.map(m => {
+    const { keys, ...safe } = m;
+    return safe;
+  });
+  if (!GOOGLE_ON || req.user) return strip(TEXT_MODELS);
   const g = getGuestModelEntry();
-  return g ? [g] : [];
+  return g ? strip([g]) : [];
 }
 function guestBlocked(req) {
   return GOOGLE_ON && !req.user;
