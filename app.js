@@ -394,6 +394,7 @@ const SVG_SPEAKER_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 const SVG_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 const SVG_RETRY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10"/><path d="M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>';
 const SVG_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+const SVG_SELECT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 5h11l-2.5 3.5L16 12H5"/></svg>';
 function speakBtnEl(idx){
   const wrap = document.createElement('div');
   wrap.className = 'ai-actions';
@@ -401,6 +402,7 @@ function speakBtnEl(idx){
   wrap.innerHTML =
     '<button class="speak-btn" data-act="speak" aria-label="'+esc(T('listen'))+'">'+SVG_SPEAKER+'</button>' +
     '<button class="speak-btn" data-act="copy" aria-label="'+esc(T('copy'))+'">'+SVG_COPY+'</button>' +
+    '<button class="speak-btn" data-act="select" aria-label="Pilih teks">'+SVG_SELECT+'</button>' +
     '<button class="speak-btn" data-act="retry" aria-label="'+esc(T('retry'))+'">'+SVG_RETRY+'</button>' +
     '<button class="speak-btn" data-act="del" aria-label="'+esc(T('del'))+'">'+SVG_DEL+'</button>';
   return wrap;
@@ -1187,6 +1189,19 @@ function bindEvents(){
       const act = ab.dataset.act;
       if(act === 'speak'){ toggleSpeak(idx, ab); }
       else if(act === 'copy'){ const m = cur.messages[idx]; if(m) copyText(m.text || ''); }
+      else if(act === 'select'){
+        const div = msgsEl.querySelector('.msg.ai[data-idx="'+idx+'"]');
+        if(!div) return;
+        // Toggle mode pilih teks
+        if(div.classList.contains('selectable')){
+          div.classList.remove('selectable');
+          const sel = window.getSelection();
+          if(sel) sel.removeAllRanges();
+        } else {
+          document.querySelectorAll('.msg.ai.selectable').forEach(d => d.classList.remove('selectable'));
+          div.classList.add('selectable');
+        }
+      }
       else if(act === 'retry'){
         if(streaming) return;
         const m = cur.messages[idx];
