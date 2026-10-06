@@ -46,6 +46,10 @@ id: {
   maxSize:'Ukuran maksimal 12MB.',
   wpTooBig:'Wallpaper terlalu besar untuk disimpan permanen, tapi tetap dipakai sesi ini.',
   downloadZip:'Download kode.zip (', filesSuffix:' file)',
+  voiceInput:'Input suara', micDenied:'Izin mikrofon ditolak.',
+  micError:'Tidak bisa merekam suara.',
+  transcribeFail:'Gagal mengubah suara jadi teks: ',
+  noSpeech:'Tidak ada suara yang terdeteksi, coba lagi.',
 },
 en: {
   menu:'Menu', selectModel:'Select AI model', settings:'Settings', add:'Add',
@@ -78,6 +82,10 @@ en: {
   maxSize:'Maximum size 12MB.',
   wpTooBig:'Wallpaper too large to save permanently, but it will be used for this session.',
   downloadZip:'Download code.zip (', filesSuffix:' files)',
+  voiceInput:'Voice input', micDenied:'Microphone permission denied.',
+  micError:'Could not record audio.',
+  transcribeFail:'Failed to transcribe: ',
+  noSpeech:'No speech detected, please try again.',
 }
 };
 const LOGIN_VERBS = {
@@ -90,6 +98,7 @@ const LOGIN_VERBS = {
   'menganimasikan gambar':{id:'menganimasikan gambar',en:'animating images'},
   'melihat file tersimpan':{id:'melihat file tersimpan',en:'viewing saved files'},
   'melihat gambar terlampir':{id:'melihat gambar terlampir',en:'viewing attached images'},
+  'memakai input suara':{id:'memakai input suara',en:'using voice input'},
 };
 const COLOR_I18N = {
   merah:['merah','Red'], kuning:['kuning','Yellow'], hijau:['hijau','Green'],
@@ -1031,6 +1040,73 @@ function bindEvents(){
   $('#attachX').onclick = () => { attach=null; editImgFile=null; animImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
 
   $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
+
+  /* ---------- Input suara: rekam -> Deepgram STT -> isi ke textarea ---------- */
+  let micRecorder = null, micChunks = [], micStream = null;
+  const micBtn = $('#micBtn');
+  function stopMicTracks(){
+    if(micStream){ micStream.getTracks().forEach(t => { try{ t.stop(); }catch(_){} }); micStream = null; }
+  }
+  async function toggleMic(){
+    if(micRecorder && micRecorder.state === 'recording'){
+      try{ micRecorder.stop(); }catch(_){}
+      return;
+    }
+    if(!needLogin('memakai input suara')) return;
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined'){
+      alert(T('micError'));
+      return;
+    }
+    let stream;
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }catch(e){
+      alert(T('micDenied'));
+      return;
+    }
+    micStream = stream;
+    micChunks = [];
+    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
+      : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+    try{
+      micRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    }catch(e){
+      stopMicTracks();
+      alert(T('micError'));
+      return;
+    }
+    micRecorder.ondataavailable = e => { if(e.data && e.data.size) micChunks.push(e.data); };
+    micRecorder.onstop = async () => {
+      micBtn.classList.remove('recording');
+      stopMicTracks();
+      const blob = new Blob(micChunks, { type: micRecorder.mimeType || 'audio/webm' });
+      micChunks = [];
+      if(blob.size < 1000){ alert(T('noSpeech')); return; }
+      const oldPh = inputEl.placeholder;
+      inputEl.placeholder = '...';
+      try{
+        const fd = new FormData();
+        fd.append('audio', blob, 'voice.webm');
+        const r = await fetch('/api/transcribe', { method:'POST', body: fd });
+        const j = await r.json().catch(() => ({}));
+        if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+        const text = (j.transcript || '').trim();
+        if(!text){ alert(T('noSpeech')); return; }
+        const cur = inputEl.value;
+        inputEl.value = cur ? (cur.replace(/\s+$/,'') + ' ' + text) : text;
+        inputEl.dispatchEvent(new Event('input', { bubbles:true }));
+        inputEl.focus();
+      }catch(e){
+        alert(T('transcribeFail') + (e.message || e));
+      }finally{
+        inputEl.placeholder = oldPh;
+      }
+    };
+    micRecorder.onerror = () => { micBtn.classList.remove('recording'); stopMicTracks(); };
+    micBtn.classList.add('recording');
+    try{ micRecorder.start(); }catch(e){ micBtn.classList.remove('recording'); stopMicTracks(); alert(T('micError')); }
+  }
+  if(micBtn) micBtn.onclick = toggleMic;
   inputEl.addEventListener('input', autogrow);
   // Enter = baris baru; pengiriman hanya lewat tombol kirim
 
