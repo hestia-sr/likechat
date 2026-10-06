@@ -157,6 +157,21 @@ button svg{display:block;width:22px;height:22px}
 .speak-btn svg{width:18px;height:18px}
 .speak-btn:active{transform:scale(.93)}
 .speak-btn.playing{background:var(--btn);color:var(--btn-fg)}
+/* Popup reaction pesan AI */
+#reactPopup{position:fixed;z-index:40;background:var(--glass);backdrop-filter:blur(22px) saturate(1.3);
+  -webkit-backdrop-filter:blur(22px) saturate(1.3);border-radius:18px;padding:10px 12px;
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 30px rgba(0,0,0,.5);
+  display:flex;flex-direction:column;gap:8px;user-select:none;-webkit-user-select:none}
+#reactPopup.hidden{display:none}
+.react-emojis{display:flex;gap:4px}
+.react-emojis button{font-size:26px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.react-emojis button:active{transform:scale(1.25);background:rgba(255,255,255,.12)}
+.react-actions{display:flex;gap:8px;justify-content:center}
+.react-actions .icon-btn{width:38px;height:38px}
+.react-actions .icon-btn svg{width:20px;height:20px}
+/* Badge reaction di pesan */
+.msg-reaction{display:inline-block;font-size:15px;background:var(--glass);border:1px solid rgba(255,255,255,.14);
+  border-radius:999px;padding:2px 8px;margin-top:4px;backdrop-filter:blur(8px)}
 #modeChip{display:flex;align-items:center;gap:6px;align-self:flex-start;background:var(--btn);color:var(--btn-fg);
   font-size:12px;font-weight:600;border-radius:999px;padding:4px 6px 4px 12px;margin-bottom:6px}
 .mini-btn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25)}
