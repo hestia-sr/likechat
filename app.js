@@ -1106,6 +1106,16 @@ function bindEvents(){
   $('#modeChipX').onclick = () => { imgMode=null; editImgFile=null; animImgFile=null; setModeChip(); refreshComposerPlaceholder(); };
   $('#attachX').onclick = () => { attach=null; editImgFile=null; animImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
 
+  // Ketuk di luar pesan yang sedang dipilih -> matikan mode pilih
+  document.addEventListener('click', e => {
+    if(e.target.closest && e.target.closest('.ai-actions')) return;
+    if(e.target.closest && e.target.closest('.msg.ai.selectable')) return;
+    document.querySelectorAll('.msg.ai.selectable').forEach(d => d.classList.remove('selectable'));
+    document.querySelectorAll('.ai-actions [data-act="select"].active').forEach(b => b.classList.remove('active'));
+    const sel = window.getSelection();
+    if(sel && !sel.isCollapsed){ try{ sel.removeAllRanges(); }catch(_){} }
+  });
+
   $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
 
   /* ---------- Input suara: rekam -> Deepgram STT -> isi ke textarea ---------- */
