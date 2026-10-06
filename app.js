@@ -312,10 +312,14 @@ function statusText(m){
   const u = snip(m && m._user);
   const isImg = !!(m && ('gen' in m));
   const isVid = !!(m && ('vid' in m));
+  const uRaw = String((m && m._user) || '').toLowerCase();
+  const isCode = /buatkan|buatlah|tuliskan|code|kode|web|website|aplikasi|app|program|script|html|python|javascript|fungsi|function/.test(uRaw);
   const phases = isVid
     ? ['Menyiapkan video…', u ? 'Membuat video "'+u+'"… (1-3 menit)' : 'Membuat video… (1-3 menit)']
     : isImg
     ? ['Menyiapkan gambar…', u ? 'Menggambar "'+u+'"…' : 'Menggambar…']
+    : isCode
+    ? ['Merancang…', 'Menulis kode…']
     : [u ? 'Memahami "'+u+'"…' : 'Memahami perintah…', 'Menyusun jawaban…'];
   return phases[(m && m._phase) || 0] || phases[0];
 }
