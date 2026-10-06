@@ -254,8 +254,8 @@ function fileTreeHtml(files){
     const lang = (f.lang||'').toLowerCase(), name = (f.file||'').toLowerCase();
     return lang==='html' || name.endsWith('.html');
   });
-  // Tombol Preview di file tree: hanya untuk 1 file atau >3 file
-  const showPreview = hasHtml && (files.length === 1 || files.length > 3);
+  // Tombol Preview di file tree (file tree hanya muncul untuk >3 file)
+  const showPreview = hasHtml;
   const previewBtn = showPreview ? '<button class="ftree-preview">Preview Web</button>' : '';
   return '<div class="ftree"><div class="ftree-title">Struktur Project'+previewBtn+'</div>' + renderNode(tree, 0) + '</div>';
 }
@@ -323,9 +323,9 @@ function md(src, hideCode){
       }
     });
   }
-  // Jika ada blok kode dengan nama file, sisipkan file tree cantik di awal
+  // File tree: hanya untuk >3 file (1 file cukup kartu preview, 2-3 file cukup kode saja)
   let ftreeInsert = '';
-  if(_blocks.length >= 1 && _blocks.every(b => b.file)){
+  if(_blocks.length > 3 && _blocks.every(b => b.file)){
     ftreeInsert = fileTreeHtml(_blocks);
     // Hapus baris-baris nama file yang berantakan dari teks (sudah diwakili file tree)
     const fileNames = _blocks.map(b => b.file);
@@ -547,8 +547,8 @@ function renderMsg(m, idx){
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
     if(zipOnly) d.appendChild(zipCardEl(d._blocks));
-    // Tampilkan tombol download ZIP jika ada blok kode (kode tetap terlihat)
-    else if(d._blocks.length >= 1) d.appendChild(zipCardEl(d._blocks));
+    // Tombol ZIP hanya untuk 1 file atau >3 file (script ringan 2-3 file tidak perlu ZIP)
+    else if(d._blocks.length === 1 || d._blocks.length > 3) d.appendChild(zipCardEl(d._blocks));
     if(m.text) d.appendChild(speakBtnEl(idx));
   }
   return d;
