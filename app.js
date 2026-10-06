@@ -308,19 +308,17 @@ function zipCardEl(blocks){
 
 /* ---------- Render pesan ---------- */
 function statusText(m){
-  const snip = s => { s = String(s||'').replace(/\s+/g,' ').trim(); return s.length > 42 ? s.slice(0,42)+'…' : s; };
-  const u = snip(m && m._user);
   const isImg = !!(m && ('gen' in m));
   const isVid = !!(m && ('vid' in m));
   const uRaw = String((m && m._user) || '').toLowerCase();
   const isCode = /buatkan|buatlah|tuliskan|code|kode|web|website|aplikasi|app|program|script|html|python|javascript|fungsi|function/.test(uRaw);
   const phases = isVid
-    ? ['Menyiapkan video…', u ? 'Membuat video "'+u+'"… (1-3 menit)' : 'Membuat video… (1-3 menit)']
+    ? ['menyiapkan', 'membuat video']
     : isImg
-    ? ['Menyiapkan gambar…', u ? 'Menggambar "'+u+'"…' : 'Menggambar…']
+    ? ['menyiapkan', 'menggambar']
     : isCode
-    ? ['Merancang…', 'Menulis kode…']
-    : [u ? 'Memahami "'+u+'"…' : 'Memahami perintah…', 'Menyusun jawaban…'];
+    ? ['memahami', 'merancang']
+    : ['memahami', 'menyusun'];
   return phases[(m && m._phase) || 0] || phases[0];
 }
 function typingHtml(m){
