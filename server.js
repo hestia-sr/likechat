@@ -936,6 +936,52 @@ app.post('/api/video/animate', upload.single('image'), async (req, res) => {
     res.status(e.status || 500).json({ error: (e.error || e.message || 'tidak dikenal') });
   }
 });
+// ---------- Transkripsi suara (Deepgram STT, bahasa Indonesia) ----------
+const DEEPGRAM_API_KEY = (process.env.DEEPGRAM_API_KEY || '').trim();
+const https = require('https');
+function deepgramListen(buffer, contentType){
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.deepgram.com',
+      path: '/v1/listen?model=nova-2&language=id&smart_format=true&punctuate=true',
+      method: 'POST',
+      headers: {
+        'Authorization': 'Token ' + DEEPGRAM_API_KEY,
+        'Content-Type': contentType || 'audio/webm',
+        'Content-Length': buffer.length,
+      },
+      timeout: 60000,
+    }, (res) => {
+      let raw = '';
+      res.on('data', c => { raw += c; });
+      res.on('end', () => {
+        let data = {};
+        try { data = JSON.parse(raw); } catch(_){}
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          return reject(new Error((data && (data.err_msg || data.error)) || ('Deepgram HTTP ' + res.statusCode)));
+        }
+        resolve(data);
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(new Error('Deepgram timeout')); });
+    req.end(buffer);
+  });
+}
+app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
+  if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk memakai input suara.' });
+  if (!DEEPGRAM_API_KEY) return res.status(500).json({ error: 'kunci Deepgram belum dipasang' });
+  if (!req.file) return res.status(400).json({ error: 'audio tidak ada' });
+  try {
+    const data = await deepgramListen(req.file.buffer, req.file.mimetype);
+    const alt = data && data.results && data.results.channels && data.results.channels[0] &&
+      data.results.channels[0].alternatives && data.results.channels[0].alternatives[0];
+    const transcript = (alt && alt.transcript || '').trim();
+    res.json({ transcript });
+  } catch (e) {
+    res.status(502).json({ error: (e && e.message) || 'gagal transkripsi' });
+  }
+});
 // redeploy: pastikan logo baru ikut ter-deploy
 
 app.listen(PORT, () => console.log('LikeChat jalan di http://localhost:' + PORT));
