@@ -1295,8 +1295,7 @@ function bindEvents(){
   function safeClosest(el, sel){
     try{ return el && el.closest ? el.closest(sel) : null; }catch(_){ return null; }
   }
-  // DEBUG: nonaktifkan sementara untuk tes tombol topbar
-  /*
+  // Ketuk di luar popup menutup popup + menghilangkan seleksi biru
   document.addEventListener('click', e => {
     const pe = $('#reactEmojiPopup'), pa = $('#reactActPopup');
     const anyOpen = !pe.classList.contains('hidden') || !pa.classList.contains('hidden');
@@ -1306,7 +1305,6 @@ function bindEvents(){
     // Ketuk biasa di luar pesan AI -> hilangkan seleksi biru
     if(!safeClosest(e.target,'.msg.ai')) clearBlueSelection();
   });
-  */
 
   $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
 
