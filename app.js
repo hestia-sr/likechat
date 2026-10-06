@@ -181,6 +181,36 @@ function fallbackCopy(t){
 /* ---------- Markdown ringan ---------- */
 let _blocks = [];
 // Render daftar file sebagai tree yang rapi dan cantik
+// Buat preview HTML dari blok kode (gabungkan html+css+js)
+function buildPreviewHtml(blocks){
+  let html='', css='', js='';
+  blocks.forEach(b => {
+    const lang = (b.lang||'').toLowerCase();
+    const name = (b.file||'').toLowerCase();
+    if(lang==='html' || name.endsWith('.html')) html = b.code;
+    else if(lang==='css' || name.endsWith('.css')) css += '\n' + b.code;
+    else if(lang==='javascript' || lang==='js' || name.endsWith('.js')) js += '\n' + b.code;
+  });
+  if(!html) return null;
+  // Suntik CSS dan JS ke HTML
+  if(css) html = html.replace(/<\/head>/i, '<style>'+css+'</style></head>');
+  if(js) html = html.replace(/<\/body>/i, '<script>'+js+'</script></body>');
+  return html;
+}
+// Buka preview web dalam modal
+function openWebPreview(blocks){
+  const html = buildPreviewHtml(blocks);
+  if(!html) return;
+  const modal = document.createElement('div');
+  modal.className = 'preview-modal';
+  modal.innerHTML = '<div class="preview-head"><span>Preview Web</span>'
+    + '<button class="preview-close">Tutup</button></div>'
+    + '<iframe class="preview-frame" sandbox="allow-scripts"></iframe>';
+  modal.querySelector('.preview-close').onclick = () => modal.remove();
+  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+  modal.querySelector('.preview-frame').srcdoc = html;
+}
 function fileTreeHtml(files){
   // Kelompokkan berdasarkan folder
   const tree = {};
@@ -220,7 +250,12 @@ function fileTreeHtml(files){
     });
     return html;
   };
-  return '<div class="ftree"><div class="ftree-title">Struktur Project</div>' + renderNode(tree, 0) + '</div>';
+  const hasHtml = files.some(f => {
+    const lang = (f.lang||'').toLowerCase(), name = (f.file||'').toLowerCase();
+    return lang==='html' || name.endsWith('.html');
+  });
+  const previewBtn = hasHtml ? '<button class="ftree-preview">Preview Web</button>' : '';
+  return '<div class="ftree"><div class="ftree-title">Struktur Project'+previewBtn+'</div>' + renderNode(tree, 0) + '</div>';
 }
 function codeBoxHtml(b, i){
   const label = b.file || b.lang;
@@ -1367,6 +1402,13 @@ function bindEvents(){
     if(zc){
       const blocks = zc._blocks || (zc.closest('.msg')||{})._blocks || [];
       if(blocks.length) downloadCodeZip(blocks);
+      return;
+    }
+    const ftreePreview = e.target.closest('.ftree-preview');
+    if(ftreePreview){
+      const msgEl = ftreePreview.closest('.msg');
+      const blocks = msgEl._blocks || [];
+      openWebPreview(blocks);
       return;
     }
     const ftreeFile = e.target.closest('.ftree-file');
