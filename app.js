@@ -1237,17 +1237,24 @@ function bindEvents(){
   $('#attachX').onclick = () => { attach=null; editImgFile=null; animImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
 
   // Long-press pada pesan AI -> popup reaction
+  function pressTargetFrom(e){
+    const t = e.target;
+    const ai = t && t.closest ? t.closest('.msg.ai') : null;
+    if(!ai) return null;
+    if(t.closest('.ai-actions') || t.closest('a') || t.closest('.codebox')) return null;
+    return ai;
+  }
   msgsEl.addEventListener('touchstart', e => {
-    const ai = e.target.closest('.msg.ai');
-    if(ai && !e.target.closest('.ai-actions') && !e.target.closest('a') && !e.target.closest('.codebox')) startPress(ai);
+    const ai = pressTargetFrom(e);
+    if(ai) startPress(ai);
   }, { passive:true });
   msgsEl.addEventListener('touchend', cancelPress, { passive:true });
   msgsEl.addEventListener('touchmove', cancelPress, { passive:true });
   msgsEl.addEventListener('touchcancel', cancelPress, { passive:true });
   msgsEl.addEventListener('mousedown', e => {
     if(e.button !== 0) return;
-    const ai = e.target.closest('.msg.ai');
-    if(ai && !e.target.closest('.ai-actions') && !e.target.closest('a') && !e.target.closest('.codebox')) startPress(ai);
+    const ai = pressTargetFrom(e);
+    if(ai) startPress(ai);
   });
   msgsEl.addEventListener('mouseup', cancelPress);
   msgsEl.addEventListener('mouseleave', cancelPress);
@@ -1285,22 +1292,18 @@ function bindEvents(){
     if(sel && !sel.isCollapsed){ try{ sel.removeAllRanges(); }catch(_){} }
     document.querySelectorAll('.msg.ai.selectable').forEach(d => d.classList.remove('selectable'));
   }
+  function safeClosest(el, sel){
+    try{ return el && el.closest ? el.closest(sel) : null; }catch(_){ return null; }
+  }
   document.addEventListener('click', e => {
     const pe = $('#reactEmojiPopup'), pa = $('#reactActPopup');
     const anyOpen = !pe.classList.contains('hidden') || !pa.classList.contains('hidden');
-    if(anyOpen && !e.target.closest('#reactEmojiPopup') && !e.target.closest('#reactActPopup') && !e.target.closest('.msg.ai')){
+    if(anyOpen && !safeClosest(e.target,'#reactEmojiPopup') && !safeClosest(e.target,'#reactActPopup') && !safeClosest(e.target,'.msg.ai')){
       hideReactPopups();
     }
-    // Ketuk biasa (bukan tahan lama) di luar teks terseleksi -> hilangkan biru
-    if(!e.target.closest('.msg.ai')) clearBlueSelection();
+    // Ketuk biasa di luar pesan AI -> hilangkan seleksi biru
+    if(!safeClosest(e.target,'.msg.ai')) clearBlueSelection();
   });
-  document.addEventListener('touchend', e => {
-    // Setelah popup aksi ditutup dan tidak ada seleksi baru, bersihkan sisa seleksi
-    setTimeout(() => {
-      const pe = $('#reactEmojiPopup'), pa = $('#reactActPopup');
-      if(pe.classList.contains('hidden') && pa.classList.contains('hidden')) clearBlueSelection();
-    }, 50);
-  }, { passive:true });
 
   $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
 
