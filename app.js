@@ -946,13 +946,15 @@ function buildColors(){
 /* ---------- Popup aksi pesan ---------- */
 /* ---------- Reaction pesan AI: tahan lama -> emoji + aksi ---------- */
 let reactIdx = null, pressTimer = null, pressTarget = null;
-function hideReactPopup(){ $('#reactPopup').classList.add('hidden'); reactIdx = null; }
-function showReactPopup(idx, el){
-  const p = $('#reactPopup');
-  reactIdx = idx;
-  p.classList.remove('hidden');
+function hideReactPopups(){
+  $('#reactEmojiPopup').classList.add('hidden');
+  $('#reactActPopup').classList.add('hidden');
+  reactIdx = null;
+}
+function placePopup(p, el){
   const r = el.getBoundingClientRect();
   p.style.visibility = 'hidden';
+  p.classList.remove('hidden');
   requestAnimationFrame(() => {
     const pw = p.offsetWidth, ph = p.offsetHeight;
     let x = Math.min(Math.max(8, r.left + r.width/2 - pw/2), innerWidth - pw - 8);
@@ -960,6 +962,23 @@ function showReactPopup(idx, el){
     if(y < 8) y = r.bottom + 8;
     p.style.left = x+'px'; p.style.top = y+'px';
     p.style.visibility = 'visible';
+  });
+}
+function showReactPopups(idx, el){
+  reactIdx = idx;
+  const pe = $('#reactEmojiPopup'), pa = $('#reactActPopup');
+  // Emoji di atas pesan, aksi di bawah pesan — dua bubble terpisah
+  placePopup(pe, el);
+  pa.style.visibility = 'hidden';
+  pa.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    const r = el.getBoundingClientRect();
+    const pw = pa.offsetWidth, ph = pa.offsetHeight;
+    let x = Math.min(Math.max(8, r.left + r.width/2 - pw/2), innerWidth - pw - 8);
+    let y = r.bottom + 8;
+    if(y + ph > innerHeight - 8) y = r.top - ph - 8;
+    pa.style.left = x+'px'; pa.style.top = y+'px';
+    pa.style.visibility = 'visible';
   });
 }
 function cancelPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } pressTarget = null; }
@@ -971,7 +990,7 @@ function startPress(el){
     const msgEl = pressTarget.closest('.msg.ai');
     if(!msgEl || streaming) return;
     if(navigator.vibrate){ try{ navigator.vibrate(30); }catch(_){} }
-    showReactPopup(+msgEl.dataset.idx, msgEl);
+    showReactPopups(+msgEl.dataset.idx, msgEl);
     pressTarget = null;
   }, 550);
 }
@@ -993,7 +1012,7 @@ async function applyReaction(idx, emoji){
   saveChats();
   const div = msgsEl.querySelector('.msg.ai[data-idx="'+idx+'"]');
   if(div) renderReactionBadge(div, m);
-  hideReactPopup();
+  hideReactPopups();
   // AI menanggapi reaction dengan hangat
   if(streaming) return;
   try{
@@ -1234,11 +1253,11 @@ function bindEvents(){
   msgsEl.addEventListener('mouseleave', cancelPress);
 
   // Klik emoji reaction
-  document.querySelectorAll('#reactPopup [data-emoji]').forEach(b => {
+  document.querySelectorAll('#reactEmojiPopup [data-emoji]').forEach(b => {
     b.onclick = () => { if(reactIdx != null) applyReaction(reactIdx, b.dataset.emoji); };
   });
   $('#reactDelete').onclick = () => {
-    const idx = reactIdx; hideReactPopup();
+    const idx = reactIdx; hideReactPopups();
     if(idx == null || !cur.messages[idx]) return;
     stopSpeaking();
     cur.messages.splice(idx, 1); setTitle(); saveChats(); renderAll();
@@ -1246,10 +1265,10 @@ function bindEvents(){
   $('#reactCopy').onclick = () => {
     const m = reactIdx != null && cur.messages[reactIdx];
     if(m) copyText(m.text || '');
-    hideReactPopup();
+    hideReactPopups();
   };
   $('#reactSelect').onclick = () => {
-    const idx = reactIdx; hideReactPopup();
+    const idx = reactIdx; hideReactPopups();
     if(idx == null) return;
     const div = msgsEl.querySelector('.msg.ai[data-idx="'+idx+'"]');
     if(!div) return;
@@ -1259,11 +1278,27 @@ function bindEvents(){
     range.selectNodeContents(div);
     sel.addRange(range);
   };
-  // Ketuk di luar popup menutupnya
+  // Ketuk di luar popup menutup popup + menghilangkan seleksi biru
+  function clearBlueSelection(){
+    const sel = window.getSelection();
+    if(sel && !sel.isCollapsed){ try{ sel.removeAllRanges(); }catch(_){} }
+  }
   document.addEventListener('click', e => {
-    const p = $('#reactPopup');
-    if(!p.classList.contains('hidden') && !e.target.closest('#reactPopup') && !e.target.closest('.msg.ai')) hideReactPopup();
+    const pe = $('#reactEmojiPopup'), pa = $('#reactActPopup');
+    const anyOpen = !pe.classList.contains('hidden') || !pa.classList.contains('hidden');
+    if(anyOpen && !e.target.closest('#reactEmojiPopup') && !e.target.closest('#reactActPopup') && !e.target.closest('.msg.ai')){
+      hideReactPopups();
+    }
+    // Ketuk biasa (bukan tahan lama) di luar teks terseleksi -> hilangkan biru
+    if(!e.target.closest('.msg.ai')) clearBlueSelection();
   });
+  document.addEventListener('touchend', e => {
+    // Setelah popup aksi ditutup dan tidak ada seleksi baru, bersihkan sisa seleksi
+    setTimeout(() => {
+      const pe = $('#reactEmojiPopup'), pa = $('#reactActPopup');
+      if(pe.classList.contains('hidden') && pa.classList.contains('hidden')) clearBlueSelection();
+    }, 50);
+  }, { passive:true });
 
   $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
 
