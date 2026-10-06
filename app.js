@@ -391,13 +391,19 @@ function updateAiMsg(div, m){
 /* ---------- Suara AI: tombol speaker -> /api/speak (Deepgram TTS) ---------- */
 const SVG_SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 const SVG_SPEAKER_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>';
+const SVG_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+const SVG_RETRY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10"/><path d="M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>';
+const SVG_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
 function speakBtnEl(idx){
-  const b = document.createElement('button');
-  b.className = 'speak-btn';
-  b.dataset.idx = idx;
-  b.setAttribute('aria-label', T('listen'));
-  b.innerHTML = SVG_SPEAKER;
-  return b;
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-actions';
+  wrap.dataset.idx = idx;
+  wrap.innerHTML =
+    '<button class="speak-btn" data-act="speak" aria-label="'+esc(T('listen'))+'">'+SVG_SPEAKER+'</button>' +
+    '<button class="speak-btn" data-act="copy" aria-label="'+esc(T('copy'))+'">'+SVG_COPY+'</button>' +
+    '<button class="speak-btn" data-act="retry" aria-label="'+esc(T('retry'))+'">'+SVG_RETRY+'</button>' +
+    '<button class="speak-btn" data-act="del" aria-label="'+esc(T('del'))+'">'+SVG_DEL+'</button>';
+  return wrap;
 }
 let speakAudio = null, speakIdx = -1, speakLoading = false;
 function stopSpeaking(){
@@ -1174,8 +1180,28 @@ function bindEvents(){
   }, { passive:true });
 
   msgsEl.addEventListener('click', e => {
-    const spk = e.target.closest('.speak-btn');
-    if(spk){ toggleSpeak(spk.dataset.idx, spk); return; };
+    const ab = e.target.closest('.ai-actions button');
+    if(ab){
+      const wrap = ab.closest('.ai-actions');
+      const idx = +wrap.dataset.idx;
+      const act = ab.dataset.act;
+      if(act === 'speak'){ toggleSpeak(idx, ab); }
+      else if(act === 'copy'){ const m = cur.messages[idx]; if(m) copyText(m.text || ''); }
+      else if(act === 'retry'){
+        if(streaming) return;
+        const m = cur.messages[idx];
+        if(!m) return;
+        stopSpeaking();
+        cur.messages.splice(idx, 1);
+        renderAll(); saveChats();
+        chatAI(m.fileModel || null);
+      }
+      else if(act === 'del'){
+        stopSpeaking();
+        if(cur.messages[idx]){ cur.messages.splice(idx, 1); setTitle(); saveChats(); renderAll(); }
+      }
+      return;
+    }
     const vact = e.target.closest('.vid-act');
     if(vact){
       const idx = +vact.dataset.idx, act = vact.dataset.act;
