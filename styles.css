@@ -201,7 +201,8 @@ aside{position:fixed;top:0;bottom:0;z-index:50;background:var(--glass);backdrop-
   padding:10px 16px;color:var(--ink);font-size:14px;outline:none}
 #historyList{max-height:38vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin:4px 0}
 .hist-item{text-align:left;padding:10px 12px;border-radius:10px;font-size:13.5px;color:var(--ink);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.05)}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.05);
+  border:none;width:100%;display:block;flex:none;line-height:1.4}
 .hist-item.on{background:var(--btn);color:var(--btn-fg)}
 
 #infoPanel{left:12px;top:calc(env(safe-area-inset-top,0px) + 54px);bottom:auto;width:min(70vw,290px);
