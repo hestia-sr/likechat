@@ -309,6 +309,14 @@ function md(src, hideCode){
       // Assign filename ke blocks yang belum punya
       _blocks.forEach((b, i) => { if(!b.file && fileLines[i]) b.file = fileLines[i]; });
     }
+    // Fallback: jika masih ada blok tanpa nama file, buatkan nama default dari bahasanya
+    const defaultNames = { html:'index.html', css:'style.css', javascript:'app.js', js:'app.js', python:'main.py', json:'data.json' };
+    _blocks.forEach(b => {
+      if(!b.file){
+        const lang = (b.lang||'').toLowerCase();
+        b.file = defaultNames[lang] || (lang && lang !== 'code' ? 'file.'+lang : 'file.txt');
+      }
+    });
   }
   // Jika ada blok kode dengan nama file, sisipkan file tree cantik di awal
   let ftreeInsert = '';
