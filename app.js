@@ -1272,6 +1272,7 @@ function bindEvents(){
     if(idx == null) return;
     const div = msgsEl.querySelector('.msg.ai[data-idx="'+idx+'"]');
     if(!div) return;
+    div.classList.add('selectable');
     const sel = window.getSelection();
     sel.removeAllRanges();
     const range = document.createRange();
@@ -1282,6 +1283,7 @@ function bindEvents(){
   function clearBlueSelection(){
     const sel = window.getSelection();
     if(sel && !sel.isCollapsed){ try{ sel.removeAllRanges(); }catch(_){} }
+    document.querySelectorAll('.msg.ai.selectable').forEach(d => d.classList.remove('selectable'));
   }
   document.addEventListener('click', e => {
     const pe = $('#reactEmojiPopup'), pa = $('#reactActPopup');
