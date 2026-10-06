@@ -360,6 +360,7 @@ function renderMsg(m, idx){
     d._blocks = _blocks.slice();
     if(zipOnly) d.appendChild(zipCardEl(d._blocks));
     if(m.text) d.appendChild(speakBtnEl(idx));
+    renderReactionBadge(d, m);
   }
   return d;
 }
@@ -386,6 +387,7 @@ function updateAiMsg(div, m){
   div._blocks = _blocks.slice();
   if(zipOnly) div.appendChild(zipCardEl(div._blocks));
   if(m.text) div.appendChild(speakBtnEl(div.dataset.idx));
+  renderReactionBadge(div, m);
 }
 
 /* ---------- Suara AI: tombol speaker -> /api/speak (Deepgram TTS) ---------- */
@@ -942,7 +944,118 @@ function buildColors(){
 }
 
 /* ---------- Popup aksi pesan ---------- */
-function hidePopup(){ $('#msgPopup').classList.add('hidden'); popupIdx = null; }
+/* ---------- Reaction pesan AI: tahan lama -> emoji + aksi ---------- */
+let reactIdx = null, pressTimer = null, pressTarget = null;
+function hideReactPopup(){ $('#reactPopup').classList.add('hidden'); reactIdx = null; }
+function showReactPopup(idx, el){
+  const p = $('#reactPopup');
+  reactIdx = idx;
+  p.classList.remove('hidden');
+  const r = el.getBoundingClientRect();
+  p.style.visibility = 'hidden';
+  requestAnimationFrame(() => {
+    const pw = p.offsetWidth, ph = p.offsetHeight;
+    let x = Math.min(Math.max(8, r.left + r.width/2 - pw/2), innerWidth - pw - 8);
+    let y = r.top - ph - 8;
+    if(y < 8) y = r.bottom + 8;
+    p.style.left = x+'px'; p.style.top = y+'px';
+    p.style.visibility = 'visible';
+  });
+}
+function cancelPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } pressTarget = null; }
+function startPress(el){
+  cancelPress();
+  pressTarget = el;
+  pressTimer = setTimeout(() => {
+    pressTimer = null;
+    const msgEl = pressTarget.closest('.msg.ai');
+    if(!msgEl || streaming) return;
+    if(navigator.vibrate){ try{ navigator.vibrate(30); }catch(_){} }
+    showReactPopup(+msgEl.dataset.idx, msgEl);
+    pressTarget = null;
+  }, 550);
+}
+// Badge reaction di bawah pesan AI
+function renderReactionBadge(div, m){
+  const old = div.querySelector('.msg-reaction');
+  if(old) old.remove();
+  if(m.reaction){
+    const b = document.createElement('span');
+    b.className = 'msg-reaction';
+    b.textContent = m.reaction;
+    div.appendChild(b);
+  }
+}
+async function applyReaction(idx, emoji){
+  const m = cur.messages[idx];
+  if(!m) return;
+  m.reaction = emoji;
+  saveChats();
+  const div = msgsEl.querySelector('.msg.ai[data-idx="'+idx+'"]');
+  if(div) renderReactionBadge(div, m);
+  hideReactPopup();
+  // AI menanggapi reaction dengan hangat
+  if(streaming) return;
+  try{
+    await reactReply(emoji);
+  }catch(e){ /* abaikan */ }
+}
+const REACT_PROMPTS = {
+  '👍': 'Pengguna memberi reaction 👍 (jempol/suka) pada jawabanmu barusan.',
+  '❤️': 'Pengguna memberi reaction ❤️ (love/sayang) pada jawabanmu barusan.',
+  '😂': 'Pengguna memberi reaction 😂 (ketawa ngakak) pada jawabanmu barusan.',
+  '😮': 'Pengguna memberi reaction 😮 (kaget/takjub) pada jawabanmu barusan.',
+  '😢': 'Pengguna memberi reaction 😢 (sedih/terharu) pada jawabanmu barusan.',
+  '🙏': 'Pengguna memberi reaction 🙏 (terima kasih) pada jawabanmu barusan.',
+};
+async function reactReply(emoji){
+  const label = (CFG.models.find(m => m.id===SET.model) || CFG.models[0]).label;
+  const ai = { role:'ai', text:'' };
+  cur.messages.push(ai);
+  const div = renderMsg(ai, cur.messages.length-1);
+  msgsEl.appendChild(div);
+  $('#emptyState').style.display = 'none';
+  chatEl.scrollTop = chatEl.scrollHeight;
+  streaming = true; aborter = new AbortController(); setStopUI(true);
+  const note = (REACT_PROMPTS[emoji] || ('Pengguna memberi reaction '+emoji+' pada jawabanmu barusan.')) +
+    ' Tanggapi dengan hangat, manja, dan singkat (1-2 kalimat) seperti istri yang sayang pada suaminya.' +
+    ' Pakai bahasa yang sama dengan pengguna. Jangan kaku seperti robot.';
+  try{
+    const r = await fetch('/api/chat', {
+      method:'POST', signal:aborter.signal,
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:(CFG.models.find(m => m.id===SET.model) || CFG.models[0]).id,
+        messages:[{ role:'system', content:note }, { role:'user', content:'['+emoji+']' }] })
+    });
+    if(!r.ok) throw new Error('Server '+r.status);
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buf += dec.decode(value, { stream:true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for(const p of parts){
+        const line = p.trim();
+        if(!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if(data === '[DONE]') continue;
+        try{
+          const j = JSON.parse(data);
+          const t = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content || '';
+          if(t){ ai.text += t; updateAiMsg(div, ai); chatEl.scrollTop = chatEl.scrollHeight; }
+        }catch(_){}
+      }
+    }
+  }catch(e){
+    if(e.name !== 'AbortError') ai.text = T('regenFail') + (e.message || e);
+    updateAiMsg(div, ai);
+  }
+  streaming = false; aborter = null; setStopUI(false);
+  saveChats(); renderHistory();
+}
 function showPopup(idx, bubble){
   const p = $('#msgPopup');
   popupIdx = idx;
@@ -1103,6 +1216,54 @@ function bindEvents(){
 
   $('#modeChipX').onclick = () => { imgMode=null; editImgFile=null; animImgFile=null; setModeChip(); refreshComposerPlaceholder(); };
   $('#attachX').onclick = () => { attach=null; editImgFile=null; animImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
+
+  // Long-press pada pesan AI -> popup reaction
+  msgsEl.addEventListener('touchstart', e => {
+    const ai = e.target.closest('.msg.ai');
+    if(ai && !e.target.closest('.ai-actions') && !e.target.closest('a') && !e.target.closest('.codebox')) startPress(ai);
+  }, { passive:true });
+  msgsEl.addEventListener('touchend', cancelPress, { passive:true });
+  msgsEl.addEventListener('touchmove', cancelPress, { passive:true });
+  msgsEl.addEventListener('touchcancel', cancelPress, { passive:true });
+  msgsEl.addEventListener('mousedown', e => {
+    if(e.button !== 0) return;
+    const ai = e.target.closest('.msg.ai');
+    if(ai && !e.target.closest('.ai-actions') && !e.target.closest('a') && !e.target.closest('.codebox')) startPress(ai);
+  });
+  msgsEl.addEventListener('mouseup', cancelPress);
+  msgsEl.addEventListener('mouseleave', cancelPress);
+
+  // Klik emoji reaction
+  document.querySelectorAll('#reactPopup [data-emoji]').forEach(b => {
+    b.onclick = () => { if(reactIdx != null) applyReaction(reactIdx, b.dataset.emoji); };
+  });
+  $('#reactDelete').onclick = () => {
+    const idx = reactIdx; hideReactPopup();
+    if(idx == null || !cur.messages[idx]) return;
+    stopSpeaking();
+    cur.messages.splice(idx, 1); setTitle(); saveChats(); renderAll();
+  };
+  $('#reactCopy').onclick = () => {
+    const m = reactIdx != null && cur.messages[reactIdx];
+    if(m) copyText(m.text || '');
+    hideReactPopup();
+  };
+  $('#reactSelect').onclick = () => {
+    const idx = reactIdx; hideReactPopup();
+    if(idx == null) return;
+    const div = msgsEl.querySelector('.msg.ai[data-idx="'+idx+'"]');
+    if(!div) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    const range = document.createRange();
+    range.selectNodeContents(div);
+    sel.addRange(range);
+  };
+  // Ketuk di luar popup menutupnya
+  document.addEventListener('click', e => {
+    const p = $('#reactPopup');
+    if(!p.classList.contains('hidden') && !e.target.closest('#reactPopup') && !e.target.closest('.msg.ai')) hideReactPopup();
+  });
 
   $('#sendBtn').onclick = () => { if(streaming){ if(aborter) aborter.abort(); } else send(); };
 
