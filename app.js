@@ -1151,9 +1151,28 @@ function bindEvents(){
   function bindTopBtn(sel, panel){
     const b = document.querySelector(sel);
     if(!b){ console.warn('tombol tidak ketemu:', sel); return; }
+    const doOpen = () => {
+      const p = document.getElementById(panel);
+      if(!p){ console.warn('panel tidak ketemu:', panel); return; }
+      const was = p.classList.contains('open');
+      // tutup semua dulu
+      ['drawer','infoPanel','accountPanel','settings','codePanel'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.remove('open');
+      });
+      const s = document.getElementById('scrim');
+      if(s){ s.classList.remove('show'); s.classList.add('hidden'); }
+      if(!was){
+        p.classList.add('open');
+        if(s){
+          s.classList.remove('hidden');
+          requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('show')));
+        }
+      }
+    };
     let lastTouch = 0;
-    b.addEventListener('touchend', () => { lastTouch = Date.now(); try{ openPanel(panel); }catch(e){ console.warn(e); } }, { passive:true });
-    b.addEventListener('click', () => { if(Date.now() - lastTouch > 500){ try{ openPanel(panel); }catch(e){ console.warn(e); } } });
+    b.addEventListener('touchend', () => { lastTouch = Date.now(); doOpen(); }, { passive:true });
+    b.addEventListener('click', () => { if(Date.now() - lastTouch > 500) doOpen(); });
   }
   bindTopBtn('#menuBtn','drawer');
   bindTopBtn('#moreBtn','settings');
