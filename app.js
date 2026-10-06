@@ -1197,9 +1197,20 @@ function bindEvents(){
           div.classList.remove('selectable');
           const sel = window.getSelection();
           if(sel) sel.removeAllRanges();
+          ab.classList.remove('active');
         } else {
           document.querySelectorAll('.msg.ai.selectable').forEach(d => d.classList.remove('selectable'));
+          document.querySelectorAll('.ai-actions [data-act="select"].active').forEach(b => b.classList.remove('active'));
           div.classList.add('selectable');
+          ab.classList.add('active');
+          // Langsung pilih semua teks agar gagang seleksi muncul
+          try{
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            const range = document.createRange();
+            range.selectNodeContents(div);
+            sel.addRange(range);
+          }catch(_){}
         }
       }
       else if(act === 'retry'){
