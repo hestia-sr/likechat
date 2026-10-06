@@ -57,9 +57,14 @@
       <div id="attachBar" class="hidden"><img id="attachImg" alt=""><span id="attachName"></span><button id="attachX" class="mini-btn" data-i18n-aria="removeAttach" aria-label="Hapus lampiran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
       <textarea id="input" rows="1" data-i18n-ph="writeMsg" placeholder="Tulis pesan..."></textarea>
     </div>
-    <button id="sendBtn" class="circle-btn" data-i18n-aria="send" aria-label="Kirim">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
-    </button>
+    <div id="sendCol">
+      <button id="micBtn" class="circle-btn" data-i18n-aria="voiceInput" aria-label="Input suara">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/></svg>
+      </button>
+      <button id="sendBtn" class="circle-btn" data-i18n-aria="send" aria-label="Kirim">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+      </button>
+    </div>
   </div>
 
   <input type="file" id="fileGallery" accept="image/*" hidden>
