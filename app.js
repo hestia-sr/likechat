@@ -181,10 +181,9 @@ function fallbackCopy(t){
 /* ---------- Markdown ringan ---------- */
 let _blocks = [];
 function codeBoxHtml(b, i){
-  const peek = b.code.split('\n').slice(0,2).join('  ');
-  return '<div class="codebox" data-bi="'+i+'"><div class="codebox-head"><span>'+esc(b.lang)+
-    '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></div>'+
-    '<div class="codebox-peek">'+esc(peek)+'</div></div>';
+  return '<div class="codebox full" data-bi="'+i+'"><div class="codebox-head"><span>'+esc(b.lang)+
+    '</span><button class="codebox-copy" data-bi="'+i+'" title="Salin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>'+
+    '<pre><code>'+esc(b.code)+'</code></pre></div>';
 }
 function md(src, hideCode){
   _blocks = [];
@@ -1254,7 +1253,20 @@ function bindEvents(){
       if(blocks.length) downloadCodeZip(blocks);
       return;
     }
-    const box = e.target.closest('.codebox');
+    const copyBtn = e.target.closest('.codebox-copy');
+    if(copyBtn){
+      const msgEl = copyBtn.closest('.msg');
+      const blocks = msgEl._blocks || [];
+      const b = blocks[+copyBtn.dataset.bi];
+      if(b && b.code){
+        navigator.clipboard.writeText(b.code).then(() => {
+          copyBtn.style.opacity = '.5';
+          setTimeout(() => copyBtn.style.opacity = '', 600);
+        }).catch(() => {});
+      }
+      return;
+    }
+    const box = e.target.closest('.codebox:not(.full)');
     if(box){
       const msgEl = box.closest('.msg');
       const blocks = msgEl._blocks || [];
