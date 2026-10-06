@@ -299,3 +299,19 @@ aside{position:fixed;top:0;bottom:0;z-index:50;background:var(--glass);backdrop-
 .preview-head span{font-weight:700;font-size:14px}
 .preview-close{background:var(--btn);color:var(--btn-fg);border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer}
 .preview-frame{flex:1;border:none;border-radius:0 0 12px 12px;background:#fff;width:100%}
+.preview-card{display:flex;align-items:center;gap:14px;margin:12px 0;padding:16px;border-radius:16px;cursor:pointer;position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(168,85,247,.12));border:1px solid rgba(139,92,246,.3);box-shadow:0 4px 20px rgba(139,92,246,.15);transition:transform .15s,box-shadow .15s}
+.preview-card:active{transform:scale(.98);box-shadow:0 2px 10px rgba(139,92,246,.2)}
+.preview-card-icon{width:48px;height:48px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:14px;background:linear-gradient(135deg,#6366f1,#a855f7);box-shadow:0 4px 12px rgba(139,92,246,.4)}
+.preview-card-icon svg{width:24px;height:24px;color:#fff}
+.preview-card-text{flex:1;min-width:0}
+.preview-card-title{font-size:15px;font-weight:700;color:var(--ink)}
+.preview-card-sub{font-size:12px;color:var(--ink-dim);margin-top:2px}
+.preview-card-btn{background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(139,92,246,.35);flex:none}
+.preview-card-btn:active{transform:scale(.95)}
+.preview-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;display:flex;flex-direction:column;padding:16px;animation:previewIn .25s ease}
+@keyframes previewIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.preview-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,#1e1b4b,#4c1d95);border-radius:16px 16px 0 0;border:1px solid rgba(139,92,246,.3);border-bottom:none}
+.preview-head span{font-weight:700;font-size:15px;color:#fff;display:flex;align-items:center;gap:8px}
+.preview-close{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.preview-close:active{background:rgba(255,255,255,.25);transform:scale(.96)}
+.preview-frame{flex:1;border:none;border-radius:0 0 16px 16px;background:#fff;width:100%;border:1px solid rgba(139,92,246,.3);border-top:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
