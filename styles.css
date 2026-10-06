@@ -315,3 +315,5 @@ aside{position:fixed;top:0;bottom:0;z-index:50;background:var(--glass);backdrop-
 .preview-close{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
 .preview-close:active{background:rgba(255,255,255,.25);transform:scale(.96)}
 .preview-frame{flex:1;border:none;border-radius:0 0 16px 16px;background:#fff;width:100%;border:1px solid rgba(139,92,246,.3);border-top:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.stream-status{margin-bottom:8px;opacity:.85}
+.stream-status .typing{font-size:12px}
