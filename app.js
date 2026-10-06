@@ -181,14 +181,19 @@ function fallbackCopy(t){
 /* ---------- Markdown ringan ---------- */
 let _blocks = [];
 function codeBoxHtml(b, i){
-  return '<div class="codebox full" data-bi="'+i+'"><div class="codebox-head"><span>'+esc(b.lang)+
+  const label = b.file || b.lang;
+  return '<div class="codebox full" data-bi="'+i+'"><div class="codebox-head"><span>'+esc(label)+
     '</span><button class="codebox-copy" data-bi="'+i+'" title="Salin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>'+
     '<pre><code>'+esc(b.code)+'</code></pre></div>';
 }
 function md(src, hideCode){
   _blocks = [];
-  src = String(src).replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, (m, lang, code) => {
-    _blocks.push({ lang:(lang||'code').toLowerCase(), code:code.replace(/\n+$/,'') });
+  src = String(src).replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, (m, lang, code, offset) => {
+    let fname = null;
+    const before = String(src).slice(Math.max(0, offset-200), offset);
+    const fm = before.match(/(?:^|\n)[\s*>#\-]*[`*_]{0,2}((?:[\w.\-]+\/)*[\w.\-]+\.[\w]+|\.env|\.gitignore|Dockerfile|Makefile)[`*_]{0,2}\s*:?\s*$/);
+    if(fm) fname = fm[1];
+    _blocks.push({ lang:(lang||'code').toLowerCase(), code:code.replace(/\n+$/,''), file:fname });
     return '\uE000'+(_blocks.length-1)+'\uE001';
   });
   let h = esc(src);
@@ -314,7 +319,20 @@ function zipNameFor(lang, used){
 }
 function downloadCodeZip(blocks){
   const used=new Set();
-  const files=blocks.map(b => ({ name:zipNameFor(b.lang, used), content:b.code }));
+  const files=blocks.map(b => {
+    let name = b.file || zipNameFor(b.lang, used);
+    // Pastikan nama file dengan folder tidak duplikat
+    if(b.file){
+      if(used.has(name)){
+        const dot = name.lastIndexOf('.'), base = name.slice(0,dot), ext = name.slice(dot);
+        let k=2;
+        while(used.has(base+'-'+k+ext)) k++;
+        name = base+'-'+k+ext;
+      }
+      used.add(name);
+    }
+    return { name, content:b.code };
+  });
   const a=document.createElement('a');
   a.href=URL.createObjectURL(makeZip(files));
   a.download='kode.zip';
