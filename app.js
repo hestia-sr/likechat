@@ -295,7 +295,7 @@ function md(src, hideCode){
   h = h.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   h = h.replace(/(^|[\s(>])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
   // Deteksi daftar file berurutan (misal: .env, server.js, public/index.html) -> ganti dengan file tree
-  if(_blocks.length >= 3){
+  if(_blocks.length >= 1){
     const fileLines = [];
     const tmpLines = h.split('\n');
     tmpLines.forEach(ln => {
@@ -304,15 +304,15 @@ function md(src, hideCode){
         fileLines.push(t);
       }
     });
-    // Jika ada 3+ baris yang terlihat seperti nama file, dan jumlahnya cocok dengan jumlah blok kode
-    if(fileLines.length >= 3 && fileLines.length === _blocks.length){
+    // Jika ada baris yang terlihat seperti nama file, dan jumlahnya cocok dengan jumlah blok kode
+    if(fileLines.length >= 1 && fileLines.length === _blocks.length){
       // Assign filename ke blocks yang belum punya
       _blocks.forEach((b, i) => { if(!b.file && fileLines[i]) b.file = fileLines[i]; });
     }
   }
-  // Jika ada 3+ blok kode dengan nama file, sisipkan file tree cantik di awal
+  // Jika ada blok kode dengan nama file, sisipkan file tree cantik di awal
   let ftreeInsert = '';
-  if(_blocks.length >= 3 && _blocks.every(b => b.file)){
+  if(_blocks.length >= 1 && _blocks.every(b => b.file)){
     ftreeInsert = fileTreeHtml(_blocks);
     // Hapus baris-baris nama file yang berantakan dari teks (sudah diwakili file tree)
     const fileNames = _blocks.map(b => b.file);
@@ -527,8 +527,8 @@ function renderMsg(m, idx){
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
     if(zipOnly) d.appendChild(zipCardEl(d._blocks));
-    // Tampilkan tombol download ZIP jika ada 2+ blok kode (kode tetap terlihat)
-    else if(d._blocks.length >= 2) d.appendChild(zipCardEl(d._blocks));
+    // Tampilkan tombol download ZIP jika ada blok kode (kode tetap terlihat)
+    else if(d._blocks.length >= 1) d.appendChild(zipCardEl(d._blocks));
     if(m.text) d.appendChild(speakBtnEl(idx));
   }
   return d;
