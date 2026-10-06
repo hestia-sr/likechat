@@ -321,9 +321,9 @@ function md(src, hideCode){
       }
     });
   }
-  // File tree selalu tampil kalau ada file
+  // File tree: untuk 2+ file (file tunggal tidak perlu, file banyak wajib)
   let ftreeInsert = '';
-  if(_blocks.length >= 1 && _blocks.every(b => b.file)){
+  if(_blocks.length >= 2 && _blocks.every(b => b.file)){
     ftreeInsert = fileTreeHtml(_blocks);
     // Hapus baris-baris nama file yang berantakan dari teks (sudah diwakili file tree)
     const fileNames = _blocks.map(b => b.file);
