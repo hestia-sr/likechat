@@ -543,8 +543,8 @@ function renderMsg(m, idx){
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
     if(zipOnly) d.appendChild(zipCardEl(d._blocks));
-    // Tombol ZIP hanya untuk 1 file atau >3 file (script ringan 2-3 file tidak perlu ZIP)
-    else if(d._blocks.length === 1 || d._blocks.length > 3) d.appendChild(zipCardEl(d._blocks));
+    // Tombol ZIP hanya untuk >3 file (1 file tunggal dan 2-3 file tidak perlu ZIP)
+    else if(d._blocks.length > 3) d.appendChild(zipCardEl(d._blocks));
     if(m.text) d.appendChild(speakBtnEl(idx));
   }
   return d;
