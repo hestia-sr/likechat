@@ -180,6 +180,48 @@ function fallbackCopy(t){
 
 /* ---------- Markdown ringan ---------- */
 let _blocks = [];
+// Render daftar file sebagai tree yang rapi dan cantik
+function fileTreeHtml(files){
+  // Kelompokkan berdasarkan folder
+  const tree = {};
+  files.forEach((f, idx) => {
+    const name = f.file || f.lang;
+    const parts = name.split('/');
+    let cur = tree;
+    parts.forEach((p, i) => {
+      if(i === parts.length - 1){
+        cur[p] = { _idx: idx, _file: true };
+      } else {
+        cur[p] = cur[p] || {};
+        cur = cur[p];
+      }
+    });
+  });
+  const renderNode = (node, depth) => {
+    let html = '';
+    const keys = Object.keys(node).sort((a,b) => {
+      const aDir = !node[a]._file, bDir = !node[b]._file;
+      if(aDir !== bDir) return aDir ? -1 : 1;
+      return a.localeCompare(b);
+    });
+    keys.forEach(k => {
+      const n = node[k];
+      const pad = depth * 16;
+      if(n._file){
+        html += '<div class="ftree-file" data-bi="'+n._idx+'" style="padding-left:'+(pad+8)+'px">'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'
+          + '<span>'+esc(k)+'</span></div>';
+      } else {
+        html += '<div class="ftree-folder" style="padding-left:'+(pad+8)+'px">'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+          + '<span>'+esc(k)+'</span></div>';
+        html += renderNode(n, depth+1);
+      }
+    });
+    return html;
+  };
+  return '<div class="ftree"><div class="ftree-title">Struktur Project</div>' + renderNode(tree, 0) + '</div>';
+}
 function codeBoxHtml(b, i){
   const label = b.file || b.lang;
   return '<div class="codebox full" data-bi="'+i+'"><div class="codebox-head"><span>'+esc(label)+
@@ -204,6 +246,35 @@ function md(src, hideCode){
   h = h.replace(/%%([^%]+)%%/g, '<small>$1</small>');
   h = h.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   h = h.replace(/(^|[\s(>])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+  // Deteksi daftar file berurutan (misal: .env, server.js, public/index.html) -> ganti dengan file tree
+  if(_blocks.length >= 3){
+    const fileLines = [];
+    const tmpLines = h.split('\n');
+    tmpLines.forEach(ln => {
+      const t = ln.trim().replace(/<[^>]+>/g, '').trim();
+      if(/^(?:[\w.\-]+\/)*[\w.\-]+\.[\w]+$/.test(t) || /^(\.env|\.gitignore|Dockerfile|Makefile)$/.test(t)){
+        fileLines.push(t);
+      }
+    });
+    // Jika ada 3+ baris yang terlihat seperti nama file, dan jumlahnya cocok dengan jumlah blok kode
+    if(fileLines.length >= 3 && fileLines.length === _blocks.length){
+      // Assign filename ke blocks yang belum punya
+      _blocks.forEach((b, i) => { if(!b.file && fileLines[i]) b.file = fileLines[i]; });
+    }
+  }
+  // Jika ada 3+ blok kode dengan nama file, sisipkan file tree cantik di awal
+  let ftreeInsert = '';
+  if(_blocks.length >= 3 && _blocks.every(b => b.file)){
+    ftreeInsert = fileTreeHtml(_blocks);
+    // Hapus baris-baris nama file yang berantakan dari teks (sudah diwakili file tree)
+    const fileNames = _blocks.map(b => b.file);
+    h = h.split('\n').filter(ln => {
+      const t = ln.trim().replace(/<[^>]+>/g, '').replace(/`/g,'').trim();
+      return !fileNames.includes(t);
+    }).join('\n');
+    // Hapus juga <hr> yang tersisa dari pemisah ---
+    h = h.replace(/<hr>\s*<hr>/g, '<hr>');
+  }
   const lines = h.split('\n'), out = [];
   let list = null;
   const closeList = () => { if(list){ out.push('</'+list+'>'); list = null; } };
@@ -241,6 +312,7 @@ function md(src, hideCode){
   }
   closeList();
   h = out.join('');
+  if(ftreeInsert) h = ftreeInsert + h;
   if(hideCode){
     // Kode panjang / diminta ZIP: kotak kode mentah disembunyikan, hanya link ZIP yang tampil.
     // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
@@ -1295,6 +1367,13 @@ function bindEvents(){
     if(zc){
       const blocks = zc._blocks || (zc.closest('.msg')||{})._blocks || [];
       if(blocks.length) downloadCodeZip(blocks);
+      return;
+    }
+    const ftreeFile = e.target.closest('.ftree-file');
+    if(ftreeFile){
+      const msgEl = ftreeFile.closest('.msg');
+      const target = msgEl.querySelector('.codebox[data-bi="'+ftreeFile.dataset.bi+'"]');
+      if(target) target.scrollIntoView({ behavior:'smooth', block:'center' });
       return;
     }
     const copyBtn = e.target.closest('.codebox-copy');
