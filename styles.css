@@ -281,3 +281,13 @@ aside{position:fixed;top:0;bottom:0;z-index:50;background:var(--glass);backdrop-
 .md-table th{background:rgba(255,255,255,.08);font-weight:600}
 .md-table td code{background:rgba(0,0,0,.4);padding:2px 6px;border-radius:6px;font-size:12px}
 .msg.ai hr{border:none;border-top:1px solid rgba(255,255,255,.12);margin:10px 0}
+.ftree{margin:10px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden}
+.ftree-title{padding:10px 14px;font-size:13px;font-weight:700;color:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+.ftree-file{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)}
+.ftree-file:last-child{border-bottom:none}
+.ftree-file:active{background:rgba(255,255,255,.06)}
+.ftree-file svg{width:16px;height:16px;color:#a8d4ff;flex:none}
+.ftree-file span{font-size:13px;color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace}
+.ftree-folder{display:flex;align-items:center;gap:10px;padding:9px 14px 4px;color:var(--ink-dim)}
+.ftree-folder svg{width:16px;height:16px;color:#ffd479;flex:none}
+.ftree-folder span{font-size:13px;font-weight:600}
