@@ -254,10 +254,8 @@ function fileTreeHtml(files){
     const lang = (f.lang||'').toLowerCase(), name = (f.file||'').toLowerCase();
     return lang==='html' || name.endsWith('.html');
   });
-  // Tombol Preview di file tree (file tree hanya muncul untuk >3 file)
-  const showPreview = hasHtml;
-  const previewBtn = showPreview ? '<button class="ftree-preview">Preview Web</button>' : '';
-  return '<div class="ftree"><div class="ftree-title">Struktur Project'+previewBtn+'</div>' + renderNode(tree, 0) + '</div>';
+  // File tree murni struktur project saja (tombol Preview pakai kartu cantik terpisah)
+  return '<div class="ftree"><div class="ftree-title">Struktur Project</div>' + renderNode(tree, 0) + '</div>';
 }
 // Kartu Preview Web yang cantik — muncul setiap ada kode HTML, tanpa tergantung file tree
 function previewCardHtml(blocks){
@@ -323,9 +321,9 @@ function md(src, hideCode){
       }
     });
   }
-  // File tree: hanya untuk >3 file (1 file cukup kartu preview, 2-3 file cukup kode saja)
+  // File tree selalu tampil kalau ada file
   let ftreeInsert = '';
-  if(_blocks.length > 3 && _blocks.every(b => b.file)){
+  if(_blocks.length >= 1 && _blocks.every(b => b.file)){
     ftreeInsert = fileTreeHtml(_blocks);
     // Hapus baris-baris nama file yang berantakan dari teks (sudah diwakili file tree)
     const fileNames = _blocks.map(b => b.file);
@@ -374,11 +372,9 @@ function md(src, hideCode){
   closeList();
   h = out.join('');
   if(ftreeInsert) h = ftreeInsert + h;
-  else {
-    // Tidak ada file tree: tampilkan kartu Preview Web yang cantik jika ada HTML
-    const pCard = previewCardHtml(_blocks);
-    if(pCard) h = pCard + h;
-  }
+  // Kartu Preview Web cantik selalu ditampilkan terpisah (jika memenuhi syarat)
+  const pCard = previewCardHtml(_blocks);
+  if(pCard) h = pCard + h;
   // Aturan tampil kode (biar ringan): sembunyikan kode jika ada HTML dan (1 file atau >3 file)
   // 2-3 file: kode tetap ditampilkan, Preview dimatikan
   const _hasHtml = _blocks.some(b => {
