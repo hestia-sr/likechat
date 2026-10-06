@@ -250,10 +250,6 @@ function fileTreeHtml(files){
     });
     return html;
   };
-  const hasHtml = files.some(f => {
-    const lang = (f.lang||'').toLowerCase(), name = (f.file||'').toLowerCase();
-    return lang==='html' || name.endsWith('.html');
-  });
   // File tree murni struktur project saja (tombol Preview pakai kartu cantik terpisah)
   return '<div class="ftree"><div class="ftree-title">Struktur Project</div>' + renderNode(tree, 0) + '</div>';
 }
@@ -1444,7 +1440,7 @@ function bindEvents(){
       if(blocks.length) downloadCodeZip(blocks);
       return;
     }
-    const ftreePreview = e.target.closest('.ftree-preview, .preview-card, .preview-card-btn');
+    const ftreePreview = e.target.closest('.preview-card, .preview-card-btn');
     if(ftreePreview){
       const msgEl = ftreePreview.closest('.msg');
       const blocks = msgEl._blocks || [];
