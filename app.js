@@ -371,17 +371,21 @@ function md(src, hideCode){
   }
   closeList();
   h = out.join('');
-  if(ftreeInsert) h = ftreeInsert + h;
-  // Kartu Preview Web cantik selalu ditampilkan terpisah (jika memenuhi syarat)
-  const pCard = previewCardHtml(_blocks);
-  if(pCard) h = pCard + h;
+  // File tree, kartu Preview, dan sembunyi kode hanya setelah streaming selesai
+  if(!streaming){
+    if(ftreeInsert) h = ftreeInsert + h;
+    // Kartu Preview Web cantik selalu ditampilkan terpisah (jika memenuhi syarat)
+    const pCard = previewCardHtml(_blocks);
+    if(pCard) h = pCard + h;
+  }
   // Aturan tampil kode (biar ringan): sembunyikan kode jika ada HTML dan (1 file atau >3 file)
   // 2-3 file: kode tetap ditampilkan, Preview dimatikan
+  // Selama streaming, kode tetap ditampilkan sebagian (jangan disembunyikan dulu)
   const _hasHtml = _blocks.some(b => {
     const lang = (b.lang||'').toLowerCase(), name = (b.file||'').toLowerCase();
     return lang==='html' || name.endsWith('.html');
   });
-  if(_hasHtml && (_blocks.length === 1 || _blocks.length > 3)) hideCode = true;
+  if(!streaming && _hasHtml && (_blocks.length === 1 || _blocks.length > 3)) hideCode = true;
   if(hideCode){
     // Kode panjang / diminta ZIP: kotak kode mentah disembunyikan, hanya link ZIP yang tampil.
     // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
@@ -543,8 +547,8 @@ function renderMsg(m, idx){
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
     if(zipOnly) d.appendChild(zipCardEl(d._blocks));
-    // Tombol ZIP hanya untuk >3 file (1 file tunggal dan 2-3 file tidak perlu ZIP)
-    else if(d._blocks.length > 3) d.appendChild(zipCardEl(d._blocks));
+    // Tombol ZIP hanya untuk >3 file dan setelah streaming selesai
+    else if(!streaming && d._blocks.length > 3) d.appendChild(zipCardEl(d._blocks));
     if(m.text) d.appendChild(speakBtnEl(idx));
   }
   return d;
@@ -565,6 +569,8 @@ function updateAiMsg(div, m){
   if(m.text){
     const st = codeStats(m.text);
     zipOnly = !streaming && useZipOnly(m, st);
+    // Selama masih streaming, tampilkan status di atas konten
+    if(streaming) inner += '<div class="stream-status">'+typingHtml(m)+'</div>';
     inner += md(m.text, zipOnly);
   }
   else if(!m.gen && !m.vid) inner += typingHtml(m);
