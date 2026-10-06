@@ -760,6 +760,7 @@ function setModeChip(){
 
 /* ---------- Panel & scrim ---------- */
 const PANELS = ['drawer','infoPanel','accountPanel','settings','codePanel'];
+function hidePopup(){ const p = $('#msgPopup'); if(p) p.classList.add('hidden'); popupIdx = null; }
 function closePanels(){
   PANELS.forEach(p => $('#'+p).classList.remove('open'));
   const s = $('#scrim');
