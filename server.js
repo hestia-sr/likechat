@@ -936,7 +936,58 @@ app.post('/api/video/animate', upload.single('image'), async (req, res) => {
     res.status(e.status || 500).json({ error: (e.error || e.message || 'tidak dikenal') });
   }
 });
-// ---------- Transkripsi suara (Deepgram STT, bahasa Indonesia) ----------
+// ---------- Text-to-speech (Deepgram Aura, suara Jepang uzume) ----------
+const DEEPGRAM_TTS_MODEL = (process.env.DEEPGRAM_TTS_MODEL || 'aura-2-uzume-ja').trim();
+function deepgramSpeak(text){
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({ text: String(text).slice(0, 2000) });
+    const req = https.request({
+      hostname: 'api.deepgram.com',
+      path: '/v1/speak?model=' + encodeURIComponent(DEEPGRAM_TTS_MODEL),
+      method: 'POST',
+      headers: {
+        'Authorization': 'Token ' + DEEPGRAM_API_KEY,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+      },
+      timeout: 60000,
+    }, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        const buf = Buffer.concat(chunks);
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          let msg = 'Deepgram HTTP ' + res.statusCode;
+          try { const j = JSON.parse(buf.toString('utf8')); msg = j.err_msg || j.error || msg; } catch(_){}
+          return reject(new Error(msg));
+        }
+        resolve({ audio: buf, contentType: res.headers['content-type'] || 'audio/mpeg' });
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(new Error('Deepgram timeout')); });
+    req.end(body);
+  });
+}
+app.post('/api/speak', async (req, res) => {
+  if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk mendengar suara AI.' });
+  if (!DEEPGRAM_API_KEY) return res.status(500).json({ error: 'kunci Deepgram belum dipasang' });
+  const { text } = req.body || {};
+  if (!text || !String(text).trim()) return res.status(400).json({ error: 'teks kosong' });
+  try {
+    // Bersihkan markdown agar enak didengar
+    const clean = String(text).replace(/```[\s\S]*?```/g, ' [kode] ')
+      .replace(/`([^`]+)`/g, '$1').replace(/[#*_~>|]/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\n{2,}/g, '. ').replace(/\s+/g, ' ').trim().slice(0, 2000);
+    if (!clean) return res.status(400).json({ error: 'teks kosong' });
+    const { audio, contentType } = await deepgramSpeak(clean);
+    res.set('Content-Type', contentType);
+    res.set('Cache-Control', 'no-store');
+    res.send(audio);
+  } catch (e) {
+    res.status(502).json({ error: (e && e.message) || 'gagal membuat suara' });
+  }
+});
 const DEEPGRAM_API_KEY = (process.env.DEEPGRAM_API_KEY || '').trim();
 const https = require('https');
 function deepgramListen(buffer, contentType){
@@ -968,6 +1019,7 @@ function deepgramListen(buffer, contentType){
     req.end(buffer);
   });
 }
+// ---------- Transkripsi suara (Deepgram STT, bahasa Indonesia) ----------
 app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
   if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk memakai input suara.' });
   if (!DEEPGRAM_API_KEY) return res.status(500).json({ error: 'kunci Deepgram belum dipasang' });
