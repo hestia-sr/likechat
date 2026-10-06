@@ -257,6 +257,19 @@ function fileTreeHtml(files){
   const previewBtn = hasHtml ? '<button class="ftree-preview">Preview Web</button>' : '';
   return '<div class="ftree"><div class="ftree-title">Struktur Project'+previewBtn+'</div>' + renderNode(tree, 0) + '</div>';
 }
+// Kartu Preview Web yang cantik — muncul setiap ada kode HTML, tanpa tergantung file tree
+function previewCardHtml(blocks){
+  const hasHtml = blocks.some(b => {
+    const lang = (b.lang||'').toLowerCase(), name = (b.file||'').toLowerCase();
+    return lang==='html' || name.endsWith('.html');
+  });
+  if(!hasHtml) return '';
+  return '<div class="preview-card"><div class="preview-card-icon">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>'
+    + '<div class="preview-card-text"><div class="preview-card-title">Preview Web</div>'
+    + '<div class="preview-card-sub">Lihat hasil website langsung di sini</div></div>'
+    + '<button class="preview-card-btn">Buka</button></div>';
+}
 function codeBoxHtml(b, i){
   const label = b.file || b.lang;
   return '<div class="codebox full" data-bi="'+i+'"><div class="codebox-head"><span>'+esc(label)+
@@ -348,6 +361,11 @@ function md(src, hideCode){
   closeList();
   h = out.join('');
   if(ftreeInsert) h = ftreeInsert + h;
+  else {
+    // Tidak ada file tree: tampilkan kartu Preview Web yang cantik jika ada HTML
+    const pCard = previewCardHtml(_blocks);
+    if(pCard) h = pCard + h;
+  }
   if(hideCode){
     // Kode panjang / diminta ZIP: kotak kode mentah disembunyikan, hanya link ZIP yang tampil.
     // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
@@ -1404,7 +1422,7 @@ function bindEvents(){
       if(blocks.length) downloadCodeZip(blocks);
       return;
     }
-    const ftreePreview = e.target.closest('.ftree-preview');
+    const ftreePreview = e.target.closest('.ftree-preview, .preview-card, .preview-card-btn');
     if(ftreePreview){
       const msgEl = ftreePreview.closest('.msg');
       const blocks = msgEl._blocks || [];
