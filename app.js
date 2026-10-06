@@ -50,6 +50,7 @@ id: {
   micError:'Tidak bisa merekam suara.',
   transcribeFail:'Gagal mengubah suara jadi teks: ',
   noSpeech:'Tidak ada suara yang terdeteksi, coba lagi.',
+  listen:'Dengarkan', speakFail:'Gagal membuat suara: ',
 },
 en: {
   menu:'Menu', selectModel:'Select AI model', settings:'Settings', add:'Add',
@@ -86,6 +87,7 @@ en: {
   micError:'Could not record audio.',
   transcribeFail:'Failed to transcribe: ',
   noSpeech:'No speech detected, please try again.',
+  listen:'Listen', speakFail:'Failed to generate speech: ',
 }
 };
 const LOGIN_VERBS = {
@@ -99,6 +101,7 @@ const LOGIN_VERBS = {
   'melihat file tersimpan':{id:'melihat file tersimpan',en:'viewing saved files'},
   'melihat gambar terlampir':{id:'melihat gambar terlampir',en:'viewing attached images'},
   'memakai input suara':{id:'memakai input suara',en:'using voice input'},
+  'mendengar suara AI':{id:'mendengar suara AI',en:'listening to AI voice'},
 };
 const COLOR_I18N = {
   merah:['merah','Red'], kuning:['kuning','Yellow'], hijau:['hijau','Green'],
@@ -356,6 +359,7 @@ function renderMsg(m, idx){
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
     if(zipOnly) d.appendChild(zipCardEl(d._blocks));
+    if(m.text) d.appendChild(speakBtnEl(idx));
   }
   return d;
 }
@@ -381,6 +385,61 @@ function updateAiMsg(div, m){
   div.innerHTML = inner;
   div._blocks = _blocks.slice();
   if(zipOnly) div.appendChild(zipCardEl(div._blocks));
+  if(m.text) div.appendChild(speakBtnEl(div.dataset.idx));
+}
+
+/* ---------- Suara AI: tombol speaker -> /api/speak (Deepgram TTS) ---------- */
+const SVG_SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const SVG_SPEAKER_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>';
+function speakBtnEl(idx){
+  const b = document.createElement('button');
+  b.className = 'speak-btn';
+  b.dataset.idx = idx;
+  b.setAttribute('aria-label', T('listen'));
+  b.innerHTML = SVG_SPEAKER;
+  return b;
+}
+let speakAudio = null, speakIdx = -1, speakLoading = false;
+function stopSpeaking(){
+  if(speakAudio){ try{ speakAudio.pause(); }catch(_){} speakAudio = null; }
+  speakIdx = -1; speakLoading = false;
+  document.querySelectorAll('.speak-btn.playing').forEach(b => {
+    b.classList.remove('playing'); b.innerHTML = SVG_SPEAKER;
+  });
+}
+async function toggleSpeak(idx, btn){
+  idx = +idx;
+  if(speakIdx === idx && speakAudio){
+    stopSpeaking();
+    return;
+  }
+  if(!needLogin('mendengar suara AI')) return;
+  stopSpeaking();
+  const m = cur && cur.messages[idx];
+  const text = m && m.text;
+  if(!text || !text.trim()) return;
+  speakLoading = true; speakIdx = idx;
+  btn.classList.add('playing'); btn.innerHTML = SVG_SPEAKER_OFF;
+  try{
+    const r = await fetch('/api/speak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text }),
+    });
+    if(!r.ok){
+      const j = await r.json().catch(() => ({}));
+      throw new Error(j.error || ('HTTP ' + r.status));
+    }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    speakAudio = new Audio(url);
+    speakAudio.onended = () => { URL.revokeObjectURL(url); stopSpeaking(); };
+    speakAudio.onerror = () => { URL.revokeObjectURL(url); stopSpeaking(); };
+    await speakAudio.play();
+  }catch(e){
+    stopSpeaking();
+    alert(T('speakFail') + (e.message || e));
+  }
 }
 
 /* ---------- Chat: simpan & riwayat ---------- */
@@ -1115,6 +1174,8 @@ function bindEvents(){
   }, { passive:true });
 
   msgsEl.addEventListener('click', e => {
+    const spk = e.target.closest('.speak-btn');
+    if(spk){ toggleSpeak(spk.dataset.idx, spk); return; };
     const vact = e.target.closest('.vid-act');
     if(vact){
       const idx = +vact.dataset.idx, act = vact.dataset.act;
