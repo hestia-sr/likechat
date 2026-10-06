@@ -1147,8 +1147,14 @@ async function handlePicked(kind, file){
 
 /* ---------- Event ---------- */
 function bindEvents(){
-  $('#menuBtn').onclick = () => openPanel('drawer');
-  $('#moreBtn').onclick = () => openPanel('settings');
+  // Tombol topbar: dukung klik mouse + sentuhan HP
+  [['#menuBtn','drawer'],['#moreBtn','settings']].forEach(([sel,panel]) => {
+    const b = $(sel);
+    if(!b) return;
+    let lastTouch = 0;
+    b.addEventListener('touchend', () => { lastTouch = Date.now(); openPanel(panel); }, { passive:true });
+    b.addEventListener('click', () => { if(Date.now() - lastTouch > 500) openPanel(panel); });
+  });
   $('#scrim').onclick = closePanels;
   document.querySelectorAll('[data-close]').forEach(b => b.onclick = closePanels);
 
