@@ -276,3 +276,8 @@ aside{position:fixed;top:0;bottom:0;z-index:50;background:var(--glass);backdrop-
 .img-viewer-actions{position:absolute;top:12px;right:12px;display:flex;gap:8px}
 
 ::-webkit-scrollbar{width:0;height:0}
+.md-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px;display:block;overflow-x:auto}
+.md-table th,.md-table td{border:1px solid rgba(255,255,255,.15);padding:8px 10px;text-align:left;vertical-align:top}
+.md-table th{background:rgba(255,255,255,.08);font-weight:600}
+.md-table td code{background:rgba(0,0,0,.4);padding:2px 6px;border-radius:6px;font-size:12px}
+.msg.ai hr{border:none;border-top:1px solid rgba(255,255,255,.12);margin:10px 0}
