@@ -202,10 +202,34 @@ function md(src, hideCode){
   const lines = h.split('\n'), out = [];
   let list = null;
   const closeList = () => { if(list){ out.push('</'+list+'>'); list = null; } };
-  for(const ln of lines){
-    const t = ln.trim();
+  const isTableRow = t => /^\|.*\|$/.test(t);
+  const isTableSep = t => /^\|[\s:\-|]+\|$/.test(t);
+  const parseRow = t => t.replace(/^\||\|$/g,'').split('|').map(c => c.trim());
+  for(let li = 0; li < lines.length; li++){
+    const ln = lines[li], t = ln.trim();
     let m;
+    // Tabel markdown: | a | b |  diikuti |---|---|
+    if(isTableRow(t) && li+1 < lines.length && isTableSep(lines[li+1].trim())){
+      closeList();
+      const heads = parseRow(t);
+      let th = '<table class="md-table"><thead><tr>';
+      heads.forEach(c => th += '<th>'+c+'</th>');
+      th += '</tr></thead><tbody>';
+      li += 2;
+      while(li < lines.length && isTableRow(lines[li].trim()) && !isTableSep(lines[li].trim())){
+        const cells = parseRow(lines[li].trim());
+        th += '<tr>';
+        cells.forEach(c => th += '<td>'+c+'</td>');
+        th += '</tr>';
+        li++;
+      }
+      li--;
+      th += '</tbody></table>';
+      out.push(th);
+      continue;
+    }
     if((m = t.match(/^(#{1,6})\s+(.*)/))){ closeList(); const lv = m[1].length; out.push('<h'+lv+'>'+m[2]+'</h'+lv+'>'); }
+    else if(/^(-{3,}|\*{3,}|_{3,})$/.test(t)){ closeList(); out.push('<hr>'); }
     else if((m = t.match(/^[-*]\s+(.*)/))){ if(list!=='ul'){ closeList(); out.push('<ul>'); list='ul'; } out.push('<li>'+m[1]+'</li>'); }
     else if((m = t.match(/^\d+[.)]\s+(.*)/))){ if(list!=='ol'){ closeList(); out.push('<ol>'); list='ol'; } out.push('<li>'+m[1]+'</li>'); }
     else { closeList(); if(t) out.push('<p>'+ln+'</p>'); }
