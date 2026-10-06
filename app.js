@@ -260,11 +260,11 @@ function codeStats(text){
   });
   return { n, lines };
 }
-// true jika pesan ini sebaiknya jadi ZIP saja (kode panjang atau pengguna minta zip)
+// true jika pengguna eksplisit minta ZIP saja
 function useZipOnly(m, st){
   if(!st.n) return false;
   if(m && m._wantZip) return true;
-  return st.lines > 30;
+  return false;
 }
 
 /* ---------- ZIP mini: bikin file .zip tanpa library ---------- */
@@ -402,6 +402,8 @@ function renderMsg(m, idx){
     d.innerHTML = inner;
     d._blocks = _blocks.slice();
     if(zipOnly) d.appendChild(zipCardEl(d._blocks));
+    // Tampilkan tombol download ZIP jika ada 2+ blok kode (kode tetap terlihat)
+    else if(d._blocks.length >= 2) d.appendChild(zipCardEl(d._blocks));
     if(m.text) d.appendChild(speakBtnEl(idx));
   }
   return d;
