@@ -1148,13 +1148,15 @@ async function handlePicked(kind, file){
 /* ---------- Event ---------- */
 function bindEvents(){
   // Tombol topbar: dukung klik mouse + sentuhan HP
-  [['#menuBtn','drawer'],['#moreBtn','settings']].forEach(([sel,panel]) => {
-    const b = $(sel);
-    if(!b) return;
+  function bindTopBtn(sel, panel){
+    const b = document.querySelector(sel);
+    if(!b){ console.warn('tombol tidak ketemu:', sel); return; }
     let lastTouch = 0;
-    b.addEventListener('touchend', () => { lastTouch = Date.now(); openPanel(panel); }, { passive:true });
-    b.addEventListener('click', () => { if(Date.now() - lastTouch > 500) openPanel(panel); });
-  });
+    b.addEventListener('touchend', () => { lastTouch = Date.now(); try{ openPanel(panel); }catch(e){ console.warn(e); } }, { passive:true });
+    b.addEventListener('click', () => { if(Date.now() - lastTouch > 500){ try{ openPanel(panel); }catch(e){ console.warn(e); } } });
+  }
+  bindTopBtn('#menuBtn','drawer');
+  bindTopBtn('#moreBtn','settings');
   $('#scrim').onclick = closePanels;
   document.querySelectorAll('[data-close]').forEach(b => b.onclick = closePanels);
 
