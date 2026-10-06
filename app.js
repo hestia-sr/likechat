@@ -254,7 +254,9 @@ function fileTreeHtml(files){
     const lang = (f.lang||'').toLowerCase(), name = (f.file||'').toLowerCase();
     return lang==='html' || name.endsWith('.html');
   });
-  const previewBtn = hasHtml ? '<button class="ftree-preview">Preview Web</button>' : '';
+  // Tombol Preview di file tree: hanya untuk 1 file atau >3 file
+  const showPreview = hasHtml && (files.length === 1 || files.length > 3);
+  const previewBtn = showPreview ? '<button class="ftree-preview">Preview Web</button>' : '';
   return '<div class="ftree"><div class="ftree-title">Struktur Project'+previewBtn+'</div>' + renderNode(tree, 0) + '</div>';
 }
 // Kartu Preview Web yang cantik — muncul setiap ada kode HTML, tanpa tergantung file tree
@@ -264,6 +266,9 @@ function previewCardHtml(blocks){
     return lang==='html' || name.endsWith('.html');
   });
   if(!hasHtml) return '';
+  const n = blocks.length;
+  // Preview aktif hanya untuk 1 file HTML atau >3 file (biar ringan)
+  if(!(n === 1 || n > 3)) return '';
   return '<div class="preview-card"><div class="preview-card-icon">'
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>'
     + '<div class="preview-card-text"><div class="preview-card-title">Preview Web</div>'
@@ -374,6 +379,13 @@ function md(src, hideCode){
     const pCard = previewCardHtml(_blocks);
     if(pCard) h = pCard + h;
   }
+  // Aturan tampil kode (biar ringan): sembunyikan kode jika ada HTML dan (1 file atau >3 file)
+  // 2-3 file: kode tetap ditampilkan, Preview dimatikan
+  const _hasHtml = _blocks.some(b => {
+    const lang = (b.lang||'').toLowerCase(), name = (b.file||'').toLowerCase();
+    return lang==='html' || name.endsWith('.html');
+  });
+  if(_hasHtml && (_blocks.length === 1 || _blocks.length > 3)) hideCode = true;
   if(hideCode){
     // Kode panjang / diminta ZIP: kotak kode mentah disembunyikan, hanya link ZIP yang tampil.
     // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
