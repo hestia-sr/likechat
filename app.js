@@ -255,14 +255,8 @@ function fileTreeHtml(files){
 }
 // Kartu Preview Web yang cantik — muncul setiap ada kode HTML, tanpa tergantung file tree
 function previewCardHtml(blocks){
-  const hasHtml = blocks.some(b => {
-    const lang = (b.lang||'').toLowerCase(), name = (b.file||'').toLowerCase();
-    return lang==='html' || name.endsWith('.html');
-  });
-  if(!hasHtml) return '';
-  const n = blocks.length;
-  // Preview aktif hanya untuk 1 file HTML atau >3 file (biar ringan)
-  if(!(n === 1 || n > 3)) return '';
+  // Pakai displayMode terpusat agar konsisten dengan penyembunyian kode di md()
+  if(!displayMode(blocks).showPreview) return '';
   return '<div class="preview-card"><div class="preview-card-icon">'
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>'
     + '<div class="preview-card-text"><div class="preview-card-title">Preview Web</div>'
@@ -274,6 +268,21 @@ function codeBoxHtml(b, i){
   return '<div class="codebox full" data-bi="'+i+'"><div class="codebox-head"><span>'+esc(label)+
     '</span><button class="codebox-copy" data-bi="'+i+'" title="Salin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>'+
     '<pre><code>'+esc(b.code)+'</code></pre></div>';
+}
+// Mode tampilan terpusat: dipakai md() dan previewCardHtml() agar selalu konsisten
+// Aturan: (1) 1 file HTML -> kode sembunyi, preview tampil
+//         (2) 1 file non-HTML -> kode tampil, preview mati
+//         (3) 2-3 file -> kode tampil, preview mati, file tree tampil
+//         (4) 4+ file -> kode sembunyi, preview + file tree + ZIP tampil
+function displayMode(blocks){
+  const n = blocks.length;
+  const hasHtml = blocks.some(b => {
+    const lang = (b.lang||'').toLowerCase(), name = (b.file||'').toLowerCase();
+    return lang==='html' || name.endsWith('.html');
+  });
+  const hideCode = hasHtml && (n === 1 || n > 3);
+  const showPreview = hideCode; // preview tampil exactly saat kode disembunyikan
+  return { n, hasHtml, hideCode, showPreview };
 }
 function md(src, hideCode){
   _blocks = [];
@@ -374,14 +383,9 @@ function md(src, hideCode){
     const pCard = previewCardHtml(_blocks);
     if(pCard) h = pCard + h;
   }
-  // Aturan tampil kode (biar ringan): sembunyikan kode jika ada HTML dan (1 file atau >3 file)
-  // 2-3 file: kode tetap ditampilkan, Preview dimatikan
-  // Selama streaming, kode tetap ditampilkan sebagian (jangan disembunyikan dulu)
-  const _hasHtml = _blocks.some(b => {
-    const lang = (b.lang||'').toLowerCase(), name = (b.file||'').toLowerCase();
-    return lang==='html' || name.endsWith('.html');
-  });
-  if(_hasHtml && (_blocks.length === 1 || _blocks.length > 3)) hideCode = true;
+  // Aturan tampil kode terpusat via displayMode (biar ringan & konsisten)
+  const mode = displayMode(_blocks);
+  if(mode.hideCode) hideCode = true;
   if(hideCode){
     // Kode panjang / diminta ZIP: kotak kode mentah disembunyikan, hanya link ZIP yang tampil.
     // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
