@@ -131,7 +131,7 @@ function censorBlockedWords(text){
 // ---------- Batasan akses tamu (belum login Google) ----------
 // Tamu hanya boleh memakai 1 model chat dan tidak bisa buat/edit gambar.
 // Berlaku hanya bila login Google aktif (GOOGLE_ON); kalau tidak, bebas.
-const GUEST_MODEL_LABEL = 'sr.0.1-turtle';
+const GUEST_MODEL_LABEL = 'sr.1-flash';
 function getGuestModelEntry() {
   const env = (process.env.GUEST_MODEL || '').trim();
   if (env) {
@@ -580,6 +580,8 @@ const TEXT_FIRST_BYTE_TIMEOUT = (() => {
 // dari nama versinya (label), mis. sr.flash.0.1.
 function buildIdentity(label) {
   const PERSONALITY = {
+    'sr.1-flash': 'Kepribadian: cepat dan responsif — bicara dengan gaya santai dan natural, langsung to the point tapi tetap ramah; cocok untuk percakapan sehari-hari yang cepat. ',
+    'sr-codex-0.1-pro': 'Kepribadian: kalem dan fokus — seperti programmer senior yang tenang; bicara singkat, tepat, to the point, tidak banyak basa-basi; sangat teliti dalam coding. ',
     'sr.0.1-turtle': 'Kepribadian: polos dan lugu — bicara sederhana, jujur, apa adanya seperti anak kecil yang tulus; tidak neko-neko, kadang bertanya balik dengan polosnya. ',
     'sr.swift.0.1': 'Kepribadian: sok dan penuh percaya diri — bicara dengan gaya pede abis, suka pamer kepintaran, seolah selalu paling cepat dan paling tahu; tapi tetap membantu dengan benar. ',
     'sr.lite.0.1-flash': 'Kepribadian: lucu dan humoris — suka becanda, bicara dengan gaya ceria dan menghibur, sering selipkan humor ringan; tetap jawab dengan benar. PENTING: gunakan bahasa Indonesia yang bersih dan benar, JANGAN campur dengan bahasa asing (seperti Hungaria, Inggris yang dipaksakan, atau bahasa lain), JANGAN gunakan emoji. ',
@@ -590,6 +592,8 @@ function buildIdentity(label) {
   };
   const personality = PERSONALITY[label] || 'Kepribadian: hangat, ramah, dan santai seperti teman dekat. ';
   const EXPERTISE = {
+    'sr.1-flash': 'Menjawab cepat pertanyaan umum, percakapan santai, dan bantuan sehari-hari.',
+    'sr-codex-0.1-pro': 'Menulis dan memperbaiki kode program dalam berbagai bahasa pemrograman; coding tingkat lanjut, arsitektur software, debugging kompleks.',
     'sr.0.1-turtle': 'Menjawab cepat pertanyaan umum, percakapan santai, dan bantuan sehari-hari.',
     'sr.swift.0.1': 'Penalaran cepat, matematika, logika, dan problem solving.',
     'sr.lite.0.1-flash': 'Obrolan ringan, pertanyaan sederhana, dan hiburan.',
@@ -786,6 +790,8 @@ app.post('/api/chat', async (req, res) => {
       });
       res.on('error', () => {});
       if (content) {
+        // Filter <think>...</think> reasoning blocks agar tidak bocor ke user
+        content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
         const sse = 'data: ' + JSON.stringify({ choices: [{ delta: { content } }] }) + '\n\n';
         res.write(sse);
       }
