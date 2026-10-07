@@ -569,16 +569,18 @@ function updateAiMsg(div, m){
   if(m.text){
     // Selama streaming: render ringan saja (teks polos + status), tanpa markdown berat
     // Status animasi jangan dibuat ulang tiap frame biar tidak macet
+    // Sembunyikan isi code block saat streaming biar tidak berantakan
     if(streaming){
+      const cleanText = m.text.replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, '[menulis kode...]');
       let stEl = div.querySelector('.stream-status');
       let txEl = div.querySelector('.stream-text');
       if(stEl && txEl){
-        txEl.innerHTML = esc(m.text).replace(/\n/g,'<br>');
+        txEl.innerHTML = esc(cleanText).replace(/\n/g,'<br>');
         maybeScroll();
         return;
       }
       inner += '<div class="stream-status">'+typingHtml(m)+'</div>';
-      inner += '<div class="stream-text">'+esc(m.text).replace(/\n/g,'<br>')+'</div>';
+      inner += '<div class="stream-text">'+esc(cleanText).replace(/\n/g,'<br>')+'</div>';
     } else {
       const st = codeStats(m.text);
       zipOnly = useZipOnly(m, st);
