@@ -508,20 +508,24 @@ function statusText(m){
     if(/<title[^>]*>/.test(tail)) return 'membuat judul';
     if(/logo/.test(tail) && /<(img|div|span)[^>]*>/.test(tail)) return 'membuat logo';
     if(/<h1[^>]*>/.test(tail)) return 'membuat judul utama';
-    if(/<h2[^>]*>/.test(tail)) return 'membuat sub judul';
+    if(/<h[2-6][^>]*>/.test(tail)) return 'membuat sub judul';
     if(/<button[^>]*>/.test(tail)) return 'membuat tombol';
-    if(/<form[^>]*>|<input[^>]*>/.test(tail)) return 'membuat form';
+    if(/<form[^>]*>|<input[^>]*>|<select[^>]*>|<textarea[^>]*>/.test(tail)) return 'membuat form';
     if(/<nav[^>]*>/.test(tail)) return 'membuat navigasi';
     if(/<header[^>]*>/.test(tail)) return 'membuat header';
     if(/<footer[^>]*>/.test(tail)) return 'membuat footer';
     if(/<img[^>]*>/.test(tail)) return 'menambahkan gambar';
+    if(/<video[^>]*>/.test(tail)) return 'menambahkan video';
+    if(/<audio[^>]*>/.test(tail)) return 'menambahkan audio';
     if(/<table[^>]*>/.test(tail)) return 'membuat tabel';
-    if(/<ul[^>]*>|<ol[^>]*>/.test(tail)) return 'membuat daftar';
+    if(/<ul[^>]*>|<ol[^>]*>|<li[^>]*>/.test(tail)) return 'membuat daftar';
     if(/<a[^>]*href/.test(tail)) return 'membuat link';
+    if(/<section[^>]*>|<article[^>]*>|<aside[^>]*>|<main[^>]*>/.test(tail)) return 'membuat bagian konten';
     if(/<style[^>]*>/.test(tail)) return 'menata tampilan';
     if(/<script[^>]*>/.test(tail)) return 'membuat fungsi';
     if(/<div[^>]*>/.test(tail)) return 'membuat elemen';
     if(/<p[^>]*>/.test(tail)) return 'menulis teks';
+    if(/<span[^>]*>/.test(tail)) return 'menulis teks';
     // Fallback ke bahasa
     if(lang === 'html') return 'membuat file HTML';
     if(lang === 'css') return 'menata tampilan';
