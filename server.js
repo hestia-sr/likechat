@@ -777,11 +777,56 @@ app.post('/api/chat', async (req, res) => {
       try { reader.cancel(); } catch (e) {}
     });
     (async () => {
+      const decoder = new TextDecoder();
+      let buf = '';
+      // Filter reasoning_content dari stream: beberapa model (mis. DeepSeek)
+      // mengirim field reasoning_content/thinking di delta yang tidak boleh
+      // tampil ke pengguna. Kita parse SSE dan teruskan hanya content.
+      function filterChunk(text) {
+        buf += text;
+        const lines = buf.split('\n');
+        buf = lines.pop(); // sisa baris yang belum lengkap
+        let out = '';
+        for (const line of lines) {
+          const t = line.trim();
+          if (!t.startsWith('data:')) { out += line + '\n'; continue; }
+          const payload = t.slice(5).trim();
+          if (payload === '[DONE]' || payload === '') { out += line + '\n'; continue; }
+          try {
+            const obj = JSON.parse(payload);
+            let changed = false;
+            if (obj && Array.isArray(obj.choices)) {
+              for (const ch of obj.choices) {
+                const d = ch && ch.delta;
+                if (d && typeof d === 'object') {
+                  if ('reasoning_content' in d) { delete d.reasoning_content; changed = true; }
+                  if ('reasoning' in d) { delete d.reasoning; changed = true; }
+                  if ('thinking' in d) { delete d.thinking; changed = true; }
+                }
+                const m = ch && ch.message;
+                if (m && typeof m === 'object') {
+                  if ('reasoning_content' in m) { delete m.reasoning_content; changed = true; }
+                  if ('reasoning' in m) { delete m.reasoning; changed = true; }
+                }
+              }
+            }
+            out += changed ? 'data: ' + JSON.stringify(obj) + '\n' : line + '\n';
+          } catch (e) { out += line + '\n'; }
+        }
+        return out;
+      }
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done || clientGone) break;
-          if (!res.writableEnded && !res.destroyed) res.write(value);
+          if (!res.writableEnded && !res.destroyed) {
+            const filtered = filterChunk(decoder.decode(value, { stream: true }));
+            if (filtered) res.write(filtered);
+          }
+        }
+        if (buf && !res.writableEnded && !res.destroyed) {
+          const tail = filterChunk('');
+          if (tail) res.write(tail);
         }
       } catch (e) { /* upstream abort / klien menutup koneksi */ }
       try { if (!res.writableEnded && !res.destroyed) res.end(); } catch (e) {}
