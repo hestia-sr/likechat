@@ -381,7 +381,7 @@ function md(src, hideCode){
     const lang = (b.lang||'').toLowerCase(), name = (b.file||'').toLowerCase();
     return lang==='html' || name.endsWith('.html');
   });
-  if(!streaming && _hasHtml && (_blocks.length === 1 || _blocks.length > 3)) hideCode = true;
+  if(_hasHtml && (_blocks.length === 1 || _blocks.length > 3)) hideCode = true;
   if(hideCode){
     // Kode panjang / diminta ZIP: kotak kode mentah disembunyikan, hanya link ZIP yang tampil.
     // Isi kode tetap tersimpan di _blocks untuk dibuatkan ZIP.
