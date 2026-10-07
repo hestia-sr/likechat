@@ -605,7 +605,7 @@ function updateAiMsg(div, m){
   div.innerHTML = inner;
   div._blocks = _blocks.slice();
   if(zipOnly) div.appendChild(zipCardEl(div._blocks));
-  if(m.text) div.appendChild(speakBtnEl(div.dataset.idx));
+  if(m.text && !streaming) div.appendChild(speakBtnEl(div.dataset.idx));
 }
 
 /* ---------- Suara AI: tombol speaker -> /api/speak (Deepgram TTS) ---------- */
