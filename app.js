@@ -497,6 +497,18 @@ function statusText(m){
   const isImg = !!(m && ('gen' in m));
   const isVid = !!(m && ('vid' in m));
   const uRaw = String((m && m._user) || '').toLowerCase();
+  const txt = String((m && m.text) || '');
+  // Jika sudah ada konten streaming, sesuaikan status dengan yang sedang ditulis
+  const cm = txt.match(/```(\w*)/);
+  if(cm){
+    const lang = (cm[1]||'').toLowerCase();
+    if(lang === 'html') return 'membuat file HTML';
+    if(lang === 'css') return 'menata tampilan';
+    if(lang === 'javascript' || lang === 'js') return 'membuat fungsi';
+    if(lang === 'python' || lang === 'py') return 'membuat script';
+    if(lang) return 'menulis kode ' + lang;
+    return 'menulis kode';
+  }
   const isCode = /buatkan|buatlah|tuliskan|code|kode|web|website|aplikasi|app|program|script|html|python|javascript|fungsi|function/.test(uRaw);
   const phases = isVid
     ? ['menyiapkan', 'membuat video']
@@ -587,6 +599,8 @@ function updateAiMsg(div, m){
       let txEl = div.querySelector('.stream-text');
       if(stEl && txEl){
         txEl.innerHTML = esc(cleanText).replace(/\n/g,'<br>');
+        const emEl = stEl.querySelector('em');
+        if(emEl) emEl.textContent = statusText(m);
         maybeScroll();
         return;
       }
