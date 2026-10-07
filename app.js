@@ -563,11 +563,15 @@ function updateAiMsg(div, m){
   if(m.vid) inner += vidActionsHtml(div.dataset.idx);
   let zipOnly = false;
   if(m.text){
-    const st = codeStats(m.text);
-    zipOnly = !streaming && useZipOnly(m, st);
-    // Selama masih streaming, tampilkan status di atas konten
-    if(streaming) inner += '<div class="stream-status">'+typingHtml(m)+'</div>';
-    inner += md(m.text, zipOnly);
+    // Selama streaming: render ringan saja (teks polos + status), tanpa markdown berat
+    if(streaming){
+      inner += '<div class="stream-status">'+typingHtml(m)+'</div>';
+      inner += '<div class="stream-text">'+esc(m.text).replace(/\n/g,'<br>')+'</div>';
+    } else {
+      const st = codeStats(m.text);
+      zipOnly = useZipOnly(m, st);
+      inner += md(m.text, zipOnly);
+    }
   }
   else if(!m.gen && !m.vid) inner += typingHtml(m);
   div.innerHTML = inner;
