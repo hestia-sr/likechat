@@ -780,9 +780,12 @@ app.post('/api/chat', async (req, res) => {
     (async () => {
       const decoder = new TextDecoder();
       let buf = '';
+      let sentText = ''; // akumulasi teks content yang sudah dikirim (untuk deteksi pengulangan)
       // Filter reasoning_content dari stream: beberapa model (mis. DeepSeek)
       // mengirim field reasoning_content/thinking di delta yang tidak boleh
       // tampil ke pengguna. Kita parse SSE dan teruskan hanya content.
+      // Juga deteksi pengulangan: jika model mengulang kalimat yang sama,
+      // potong bagian yang duplikat.
       function filterChunk(text) {
         buf += text;
         const lines = buf.split('\n');
@@ -803,6 +806,33 @@ app.post('/api/chat', async (req, res) => {
                   if ('reasoning_content' in d) { delete d.reasoning_content; changed = true; }
                   if ('reasoning' in d) { delete d.reasoning; changed = true; }
                   if ('thinking' in d) { delete d.thinking; changed = true; }
+                  // Deteksi pengulangan: jika content baru adalah pengulangan
+                  // dari teks yang baru saja dikirim, potong bagian duplikatnya
+                  if (typeof d.content === 'string' && d.content) {
+                    const newContent = d.content;
+                    // Cari apakah newContent mengulang bagian akhir sentText
+                    // Contoh: sentText="abc", newContent="abcabc" -> potong jadi ""
+                    // Atau: sentText berakhir "xyz", newContent="xyz..." -> potong "xyz"
+                    let deduped = newContent;
+                    // Cek pengulangan penuh: jika sentText diakhiri pola yang sama dengan awal newContent
+                    const maxCheck = Math.min(sentText.length, newContent.length * 2);
+                    if (maxCheck > 20) {
+                      const tail = sentText.slice(-maxCheck);
+                      // Jika newContent dimulai dengan pengulangan tail
+                      for (let len = Math.min(tail.length, newContent.length); len > 20; len--) {
+                        const pattern = tail.slice(-len);
+                        if (newContent.startsWith(pattern)) {
+                          // Pastikan ini benar-benar pengulangan, bukan kebetulan
+                          // dengan memeriksa apakah pola muncul di akhir sentText
+                          deduped = newContent.slice(len);
+                          changed = true;
+                          break;
+                        }
+                      }
+                    }
+                    d.content = deduped;
+                    sentText += deduped;
+                  }
                 }
                 const m = ch && ch.message;
                 if (m && typeof m === 'object') {
