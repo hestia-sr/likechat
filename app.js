@@ -583,19 +583,18 @@ function updateAiMsg(div, m){
     // Status animasi jangan dibuat ulang tiap frame biar tidak macet
     // Tampilkan info deskriptif sesuai jenis kode yang sedang ditulis
     if(streaming){
-      // Tampilkan teks biasa, tapi sembunyikan isi code block (status sudah menjelaskan)
-      const cleanText = m.text.replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, '');
+      // Saat streaming: hanya tampilkan status (di samping diamond), teks disembunyikan
       let stEl = div.querySelector('.stream-status');
       let txEl = div.querySelector('.stream-text');
       if(stEl && txEl){
         const emEl = stEl.querySelector('em');
         if(emEl) emEl.textContent = statusText(m);
-        txEl.innerHTML = esc(cleanText.trim()).replace(/\n/g,'<br>');
+        txEl.innerHTML = '';
         maybeScroll();
         return;
       }
       inner += '<div class="stream-status">'+typingHtml(m)+'</div>';
-      inner += '<div class="stream-text">'+esc(cleanText.trim()).replace(/\n/g,'<br>')+'</div>';
+      inner += '<div class="stream-text"></div>';
     } else {
       const st = codeStats(m.text);
       zipOnly = useZipOnly(m, st);
