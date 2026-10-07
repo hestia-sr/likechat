@@ -762,6 +762,37 @@ app.post('/api/chat', async (req, res) => {
       }
       return r;
     });
+    // Jika upstream tidak mengembalikan SSE (mis. Mortera mengabaikan stream:true
+    // dan mengirim JSON utuh), konversi ke format SSE agar frontend tetap jalan.
+    const ct = (upstream.headers.get('content-type') || '').toLowerCase();
+    if (!ct.includes('text/event-stream')) {
+      let text = '';
+      try { text = await upstream.text(); } catch (e) { text = ''; }
+      let content = '';
+      try {
+        const j = JSON.parse(text);
+        const ch = j && j.choices && j.choices[0];
+        if (ch) {
+          if (ch.message && typeof ch.message.content === 'string') content = ch.message.content;
+          else if (ch.delta && typeof ch.delta.content === 'string') content = ch.delta.content;
+          else if (typeof ch.text === 'string') content = ch.text;
+        }
+      } catch (e) { content = ''; }
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+      });
+      res.on('error', () => {});
+      if (content) {
+        const sse = 'data: ' + JSON.stringify({ choices: [{ delta: { content } }] }) + '\n\n';
+        res.write(sse);
+      }
+      res.write('data: [DONE]\n\n');
+      try { res.end(); } catch (e) {}
+      return;
+    }
     res.writeHead(200, {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache',
