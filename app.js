@@ -594,7 +594,7 @@ function updateAiMsg(div, m){
         if(lang) return 'menulis kode ' + lang + '...';
         return 'menulis kode...';
       };
-      const cleanText = m.text.replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, (mm, lang) => '[' + codeDesc('```'+lang) + ']');
+      const cleanText = m.text.replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, (mm, lang) => codeDesc('```'+lang));
       let stEl = div.querySelector('.stream-status');
       let txEl = div.querySelector('.stream-text');
       if(stEl && txEl){
