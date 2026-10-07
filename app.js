@@ -569,9 +569,20 @@ function updateAiMsg(div, m){
   if(m.text){
     // Selama streaming: render ringan saja (teks polos + status), tanpa markdown berat
     // Status animasi jangan dibuat ulang tiap frame biar tidak macet
-    // Sembunyikan isi code block saat streaming biar tidak berantakan
+    // Tampilkan info deskriptif sesuai jenis kode yang sedang ditulis
     if(streaming){
-      const cleanText = m.text.replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, '[menulis kode...]');
+      const codeDesc = (txt) => {
+        const m = txt.match(/```(\w*)/);
+        if(!m) return 'menulis...';
+        const lang = (m[1]||'').toLowerCase();
+        if(lang === 'html') return 'membuat file HTML...';
+        if(lang === 'css') return 'menata tampilan...';
+        if(lang === 'javascript' || lang === 'js') return 'membuat fungsi...';
+        if(lang === 'python' || lang === 'py') return 'membuat script Python...';
+        if(lang) return 'menulis kode ' + lang + '...';
+        return 'menulis kode...';
+      };
+      const cleanText = m.text.replace(/```(\w*)\n?([\s\S]*?)(?:```|$)/g, (mm, lang) => '[' + codeDesc('```'+lang) + ']');
       let stEl = div.querySelector('.stream-status');
       let txEl = div.querySelector('.stream-text');
       if(stEl && txEl){
