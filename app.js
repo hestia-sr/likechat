@@ -498,10 +498,31 @@ function statusText(m){
   const isVid = !!(m && ('vid' in m));
   const uRaw = String((m && m._user) || '').toLowerCase();
   const txt = String((m && m.text) || '');
-  // Jika sudah ada konten streaming, sesuaikan status dengan yang sedang ditulis
+  // Status otomatis sesuai elemen yang sedang ditulis AI (deteksi dari konten terbaru)
   const cm = txt.match(/```(\w*)/);
   if(cm){
     const lang = (cm[1]||'').toLowerCase();
+    // Ambil 500 karakter terakhir untuk deteksi elemen terbaru
+    const tail = txt.slice(-500).toLowerCase();
+    // Deteksi elemen HTML spesifik
+    if(/<title[^>]*>/.test(tail)) return 'membuat judul';
+    if(/logo/.test(tail) && /<(img|div|span)[^>]*>/.test(tail)) return 'membuat logo';
+    if(/<h1[^>]*>/.test(tail)) return 'membuat judul utama';
+    if(/<h2[^>]*>/.test(tail)) return 'membuat sub judul';
+    if(/<button[^>]*>/.test(tail)) return 'membuat tombol';
+    if(/<form[^>]*>|<input[^>]*>/.test(tail)) return 'membuat form';
+    if(/<nav[^>]*>/.test(tail)) return 'membuat navigasi';
+    if(/<header[^>]*>/.test(tail)) return 'membuat header';
+    if(/<footer[^>]*>/.test(tail)) return 'membuat footer';
+    if(/<img[^>]*>/.test(tail)) return 'menambahkan gambar';
+    if(/<table[^>]*>/.test(tail)) return 'membuat tabel';
+    if(/<ul[^>]*>|<ol[^>]*>/.test(tail)) return 'membuat daftar';
+    if(/<a[^>]*href/.test(tail)) return 'membuat link';
+    if(/<style[^>]*>/.test(tail)) return 'menata tampilan';
+    if(/<script[^>]*>/.test(tail)) return 'membuat fungsi';
+    if(/<div[^>]*>/.test(tail)) return 'membuat elemen';
+    if(/<p[^>]*>/.test(tail)) return 'menulis teks';
+    // Fallback ke bahasa
     if(lang === 'html') return 'membuat file HTML';
     if(lang === 'css') return 'menata tampilan';
     if(lang === 'javascript' || lang === 'js') return 'membuat fungsi';
