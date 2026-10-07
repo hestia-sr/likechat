@@ -564,7 +564,15 @@ function updateAiMsg(div, m){
   let zipOnly = false;
   if(m.text){
     // Selama streaming: render ringan saja (teks polos + status), tanpa markdown berat
+    // Status animasi jangan dibuat ulang tiap frame biar tidak macet
     if(streaming){
+      let stEl = div.querySelector('.stream-status');
+      let txEl = div.querySelector('.stream-text');
+      if(stEl && txEl){
+        txEl.innerHTML = esc(m.text).replace(/\n/g,'<br>');
+        maybeScroll();
+        return;
+      }
       inner += '<div class="stream-status">'+typingHtml(m)+'</div>';
       inner += '<div class="stream-text">'+esc(m.text).replace(/\n/g,'<br>')+'</div>';
     } else {
