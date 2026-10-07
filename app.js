@@ -261,7 +261,20 @@ function previewCardHtml(blocks){
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>'
     + '<div class="preview-card-text"><div class="preview-card-title">Preview Web</div>'
     + '<div class="preview-card-sub">Lihat hasil website langsung di sini</div></div>'
+    + '<button class="preview-card-dl" title="Download HTML"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
     + '<button class="preview-card-btn">Buka</button></div>';
+}
+// Download HTML sebagai file
+function downloadPreviewHtml(blocks){
+  const html = buildPreviewHtml(blocks);
+  if(!html) return;
+  const blob = new Blob([html], {type: 'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'index.html';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 100);
 }
 function codeBoxHtml(b, i){
   const label = b.file || b.lang;
@@ -1495,6 +1508,14 @@ function bindEvents(){
     if(zc){
       const blocks = zc._blocks || (zc.closest('.msg')||{})._blocks || [];
       if(blocks.length) downloadCodeZip(blocks);
+      return;
+    }
+    const dlBtn = e.target.closest('.preview-card-dl');
+    if(dlBtn){
+      e.stopPropagation();
+      const msgEl = dlBtn.closest('.msg');
+      const blocks = msgEl._blocks || [];
+      downloadPreviewHtml(blocks);
       return;
     }
     const ftreePreview = e.target.closest('.preview-card, .preview-card-btn');
