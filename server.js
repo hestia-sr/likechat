@@ -719,7 +719,7 @@ async function callOnceNoStream(baseUrl, key, model, messages, temp) {
   const mt = parseInt(process.env.MAX_TOKENS || '8000', 10);
   if (Number.isFinite(mt) && mt > 0) payload.max_tokens = mt;
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 120000);
+  const timer = setTimeout(() => ctl.abort(), 20000);
   try {
     const r = await fetch(baseUrl + '/chat/completions', {
       method: 'POST', signal: ctl.signal,
