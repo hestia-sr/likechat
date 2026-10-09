@@ -669,13 +669,69 @@ function buildIdentity(label) {
 }
 const SYSTEM_PROMPT = (process.env.SYSTEM_PROMPT || '').trim();
 
+const HTTP_TOOL = {
+  type: 'function',
+  function: {
+    name: 'http_request',
+    description: 'Kirim HTTP request ke URL eksternal. Pakai untuk heartbeat, polling, cek status/antrean, atau ambil data dari API luar.',
+    parameters: {
+      type: 'object',
+      properties: {
+        method: { type: 'string', enum: ['GET', 'POST'], description: 'Metode HTTP' },
+        url: { type: 'string', description: 'URL tujuan lengkap (harus diawali http:// atau https://)' },
+        headers: { type: 'object', description: 'Header tambahan opsional sebagai object key-value' },
+        body: { type: 'string', description: 'Body untuk POST (opsional)' },
+      },
+      required: ['method', 'url'],
+    },
+  },
+};
+async function execHttpTool(args) {
+  const a = args || {};
+  const method = String(a.method || 'GET').toUpperCase();
+  const url = String(a.url || '').trim();
+  if (!/^https?:\/\//i.test(url)) throw new Error('URL harus diawali http:// atau https://');
+  let host = '';
+  try { host = new URL(url).hostname; } catch (e) { throw new Error('URL tidak valid'); }
+  if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|0\.0\.0\.0)/i.test(host))
+    throw new Error('URL privat diblokir demi keamanan');
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 30000);
+  try {
+    const opts = { method, signal: ctl.signal, headers: Object.assign({}, a.headers || {}) };
+    if (method === 'POST' && a.body !== undefined) opts.body = String(a.body);
+    const r = await fetch(url, opts);
+    const txt = await r.text().catch(() => '');
+    return JSON.stringify({ status: r.status, body: txt.slice(0, 100000) });
+  } finally { clearTimeout(timer); }
+}
+// Fungsi sekali pakai: panggil model TANPA streaming untuk deteksi tool_calls
+async function callOnceNoStream(baseUrl, key, model, messages, temp) {
+  const payload = { model, messages, stream: false, tools: [HTTP_TOOL], tool_choice: 'auto' };
+  if (temp !== null && temp !== undefined) payload.temperature = temp;
+  const mt = parseInt(process.env.MAX_TOKENS || '8000', 10);
+  if (Number.isFinite(mt) && mt > 0) payload.max_tokens = mt;
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 120000);
+  try {
+    const r = await fetch(baseUrl + '/chat/completions', {
+      method: 'POST', signal: ctl.signal,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify(payload),
+    });
+    const txt = await r.text().catch(() => '');
+    if (!r.ok) throw upstreamError(r.status, txt);
+    return JSON.parse(txt);
+  } finally { clearTimeout(timer); }
+}
+
+
 app.post('/api/chat', async (req, res) => {
   const { model, messages, fileModel } = req.body || {};
   const useModel = fileModel || model || TEXT_MODELS[0].id;
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages kosong' });
   }
-  // Sensor kata kasar pada pesan teks terakhir pengguna (pesan tetap diproses)
   let inMessages = messages;
   {
     const lastUser = [...messages].reverse().find(m => m && m.role === 'user' && typeof m.content === 'string');
@@ -684,7 +740,6 @@ app.post('/api/chat', async (req, res) => {
       if (censored !== lastUser.content) inMessages = messages.map(m => (m === lastUser ? { ...m, content: censored } : m));
     }
   }
-  // Model pembaca file juga boleh dipakai (selain daftar model chat)
   const allowedIds = modelsFor(req).map(m => m.id);
   if (FILE_MODEL_ENTRY && FILE_MODEL_ENTRY.id && !allowedIds.includes(FILE_MODEL_ENTRY.id)) allowedIds.push(FILE_MODEL_ENTRY.id);
   const modelEntry = TEXT_MODELS.find(m => m.id === useModel) ||
@@ -700,7 +755,6 @@ app.post('/api/chat', async (req, res) => {
     });
     if (hasAttachment) return res.status(403).json({ error: 'Login dengan Google untuk mengirim gambar/file.' });
   }
-  // Pencarian web otomatis: selipkan hasil internet ke pesan terakhir pengguna
   let outMessages = inMessages;
   if (WEB_SEARCH_ON) {
     const lastUser = [...messages].reverse().find(m => m && m.role === 'user' && typeof m.content === 'string');
@@ -720,7 +774,6 @@ app.post('/api/chat', async (req, res) => {
       } catch (e) { console.log('[web] gagal: ' + ((e && e.message) || e)); }
     }
   }
-  // Suntik identitas LikeChat di awal daftar pesan (nama versi per model)
   {
     const ent = modelEntry;
     const modelLabel = (ent && ent.label) || useModel;
@@ -728,27 +781,55 @@ app.post('/api/chat', async (req, res) => {
     if (!(outMessages[0] && outMessages[0].role === 'system')) {
       outMessages = [{ role: 'system', content: identity }, ...outMessages];
     }
-    // Pengingat di akhir: riwayat bisa berisi identitas model lain (ganti-ganti model),
-    // jadi tegaskan lagi tepat sebelum model menjawab agar tidak ketuker.
-    // Catatan: JANGAN pakai awalan meta seperti "[Pengingat sistem — ...]" karena
-    // model malah mengutipnya mentah-mentah di awal jawaban (terbukti 2026-10-03).
-    // Dikecualikan untuk sr.codex.0.1 (instruksi minimal).
     if (modelLabel !== 'sr.codex.0.1') {
       outMessages = [...outMessages, { role: 'system', content: 'Kamu adalah ' + modelLabel + ', bukan model lain yang disebut di riwayat. Jangan membuka jawaban dengan identitas kecuali pengguna bertanya tentang identitas.' }];
     }
+    // Beritahu model soal kemampuan HTTP request
+    outMessages = [{ role: 'system', content: 'Kamu BISA mengirim HTTP request (GET/POST) ke URL eksternal memakai tool http_request. Pakai saat pengguna minta heartbeat, polling, cek antrean/status, atau ambil data dari API. URL privat (localhost, 127.x, 10.x, 192.168.x) diblokir.' }, ...outMessages];
   }
   try {
-    // Model bisa punya provider sendiri (base URL + key khusus); kalau tidak, pakai bawaan
     const entry = modelEntry;
     const baseUrl = (entry && entry.baseUrl) || TEXT_BASE_URL;
     const keys = (entry && entry.keys && entry.keys.length) ? entry.keys : TEXT_KEYS;
+
+    // ===== FASE 1: deteksi tool_calls (non-streaming) =====
+    let finalMessages = outMessages;
+    try {
+      const probe = await tryKeys(keys, async (key) => {
+        return await callOnceNoStream(baseUrl, key, useModel, outMessages, TEXT_TEMPERATURE);
+      });
+      const ch = probe && probe.choices && probe.choices[0] && probe.choices[0].message;
+      const toolCalls = ch && ch.tool_calls;
+      if (toolCalls && toolCalls.length) {
+        console.log('[tools] model meminta ' + toolCalls.length + ' http_request');
+        finalMessages = [...outMessages];
+        if (ch.content) finalMessages.push({ role: 'assistant', content: ch.content, tool_calls: toolCalls });
+        else finalMessages.push({ role: 'assistant', content: '', tool_calls: toolCalls });
+        for (const tc of toolCalls) {
+          let result;
+          try {
+            const args = typeof tc.function.arguments === 'string'
+              ? JSON.parse(tc.function.arguments) : (tc.function.arguments || {});
+            console.log('[tools] -> ' + (args.method || 'GET') + ' ' + (args.url || ''));
+            result = await execHttpTool(args);
+          } catch (te) {
+            result = JSON.stringify({ error: (te && te.message) || 'gagal' });
+          }
+          finalMessages.push({ role: 'tool', tool_call_id: tc.id, content: result });
+        }
+      }
+    } catch (te) {
+      // Provider tidak support tools / gagal probe -> lanjut tanpa tools
+      console.log('[tools] probe dilewati: ' + ((te && te.message) || te));
+    }
+
+    // ===== FASE 2: streaming jawaban akhir =====
     const upstream = await tryKeys(keys, async (key) => {
       const keyNo = keys.indexOf(key) + 1;
       const doChat = async (temp) => {
         const ctl = new AbortController();
         const totalTimer = setTimeout(() => ctl.abort(), 600000);
         let firstByteTimedOut = false;
-        // Timeout per provider: timeout_<provider> (detik), mis. timeout_tnt=30. Kalau tidak ada, pakai global.
         let fbTimeout = TEXT_FIRST_BYTE_TIMEOUT;
         if (entry && entry.provider) {
           const pv = parseFloat(process.env['timeout_' + entry.provider]);
@@ -756,9 +837,8 @@ app.post('/api/chat', async (req, res) => {
         }
         const firstByteTimer = setTimeout(() => { firstByteTimedOut = true; ctl.abort(); }, fbTimeout * 1000);
         try {
-          const payload = { model: useModel, messages: outMessages, stream: true };
+          const payload = { model: useModel, messages: finalMessages, stream: true };
           if (temp !== null && temp !== undefined) payload.temperature = temp;
-          // Batas output: dari env MAX_TOKENS, default 8000 biar jawaban panjang tidak kepotong provider.
           const mt = parseInt(process.env.MAX_TOKENS || '8000', 10);
           if (Number.isFinite(mt) && mt > 0) payload.max_tokens = mt;
           console.log('[chat] key ' + keyNo + '/' + keys.length + ' -> ' + useModel);
@@ -768,7 +848,7 @@ app.post('/api/chat', async (req, res) => {
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
             body: JSON.stringify(payload),
           });
-          clearTimeout(firstByteTimer); // header diterima, stream boleh lama
+          clearTimeout(firstByteTimer);
           return r;
         } catch (e) {
           if (e && e.name === 'AbortError' && firstByteTimedOut) {
@@ -780,8 +860,6 @@ app.post('/api/chat', async (req, res) => {
       let r = await doChat(TEXT_TEMPERATURE);
       if (!r.ok) {
         const txt = await r.text().catch(() => '');
-        // Sebagian model hanya mengizinkan nilai temperature tertentu ->
-        // coba lagi dengan 1, lalu tanpa field temperature sama sekali.
         if (/temperature/i.test(txt)) {
           r = (TEXT_TEMPERATURE !== 1) ? await doChat(1) : await doChat(null);
           if (r.ok) return r;
@@ -791,8 +869,6 @@ app.post('/api/chat', async (req, res) => {
       }
       return r;
     });
-    // Jika upstream tidak mengembalikan SSE (mis. Mortera mengabaikan stream:true
-    // dan mengirim JSON utuh), konversi ke format SSE agar frontend tetap jalan.
     const ct = (upstream.headers.get('content-type') || '').toLowerCase();
     if (!ct.includes('text/event-stream')) {
       let text = '';
@@ -815,7 +891,6 @@ app.post('/api/chat', async (req, res) => {
       });
       res.on('error', () => {});
       if (content) {
-        // Filter <think>...</think> reasoning blocks agar tidak bocor ke user
         content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
         const sse = 'data: ' + JSON.stringify({ choices: [{ delta: { content } }] }) + '\n\n';
         res.write(sse);
@@ -830,7 +905,6 @@ app.post('/api/chat', async (req, res) => {
       'Connection': 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
-    // Error tulis (mis. klien putus di tengah jalan) tidak boleh membunuh server
     res.on('error', () => {});
     const reader = upstream.body.getReader();
     let clientGone = false;
@@ -855,6 +929,7 @@ app.post('/api/chat', async (req, res) => {
     });
   }
 });
+
 
 // ---------- DeAPI v2: submit job lalu polling sampai selesai ----------
 // Endpoint v2 bersifat ASINKRON: POST hanya mengembalikan {data:{request_id}},
