@@ -229,11 +229,12 @@ body.light aside{background:#f0f3f8}
 
 #accountPanel{left:0;width:min(70vw,290px);transform:translateX(-105%);border-right:1px solid rgba(255,255,255,.08);overflow-y:auto}
 #accountPanel.open{transform:none}
-.acc-profile{display:flex;flex-direction:column;align-items:center;padding:10px 12px 8px}
-.acc-photo{width:60px;height:60px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.08)}
+.acc-profile{display:flex;flex-direction:row;align-items:center;gap:12px;padding:12px}
+.acc-photo{width:52px;height:52px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.08);flex:none}
 .acc-photo.hidden{display:none}
-.acc-name{font-size:15px;font-weight:700;margin-top:8px;color:var(--ink);text-align:center}
-.acc-email{font-size:12px;color:var(--ink-dim);margin-top:3px;overflow-wrap:anywhere;text-align:center}
+.acc-name{font-size:15px;font-weight:700;color:var(--ink);text-align:left;margin-top:0}
+.acc-email{font-size:12px;color:var(--ink-dim);margin-top:2px;overflow-wrap:anywhere;text-align:left}
+.acc-idwrap{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
 #accountPanel .drawer-nav{margin-top:6px}
 .acc-list{padding:10px 2px 8px;display:flex;flex-direction:column;gap:8px}
 .acc-empty{font-size:13px;color:var(--ink-dim);text-align:center;padding:14px 8px}
