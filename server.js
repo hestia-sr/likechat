@@ -785,7 +785,7 @@ app.post('/api/chat', async (req, res) => {
       outMessages = [...outMessages, { role: 'system', content: 'Kamu adalah ' + modelLabel + ', bukan model lain yang disebut di riwayat. Jangan membuka jawaban dengan identitas kecuali pengguna bertanya tentang identitas.' }];
     }
     // Beritahu model soal kemampuan HTTP request
-    outMessages = [{ role: 'system', content: 'Kamu BISA mengirim HTTP request (GET/POST) ke URL eksternal memakai tool http_request. Pakai saat pengguna minta heartbeat, polling, cek antrean/status, atau ambil data dari API. URL privat (localhost, 127.x, 10.x, 192.168.x) diblokir.' }, ...outMessages];
+    outMessages = [{ role: 'system', content: 'PENTING: Tool http_request HANYA boleh dipakai jika pengguna secara EKSPLISIT memintamu mengirim HTTP request ke URL tertentu (mis. \'kirim POST ke https://...\'). JANGAN PERNAH pakai tool ini untuk pesan obrolan biasa, pertanyaan, atau sapaan. Jika ragu, JANGAN pakai tool. URL privat (localhost, 127.x, 10.x, 192.168.x) diblokir.' }, ...outMessages];
   }
   try {
     const entry = modelEntry;
