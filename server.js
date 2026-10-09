@@ -79,7 +79,7 @@ const FALLBACK_MODELS = [
   { label: 'sr.smart.0.1', id: 'kimi-k3' },
   { label: 'sr.prime.0.1', id: 'step-5-preview' },
 ];
-const TEXT_MODELS = [1, 2, 3, 4, 5, 6, 7, 8].map(parseModelEnv).filter(Boolean);
+const TEXT_MODELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(parseModelEnv).filter(Boolean);
 if (TEXT_MODELS.length === 0) TEXT_MODELS.push(...FALLBACK_MODELS);
 
 // ---------- Model pembaca file & gambar (bisa diganti lewat .env) ----------
