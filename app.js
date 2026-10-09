@@ -1008,7 +1008,11 @@ async function send(){
   }
   if(imgMode === 'videoanim'){
     if(!text || !animImgFile) return;
-    const imgData = attach && attach.kind === 'image' ? attach.dataUrl : null;
+    let imgData = attach && attach.kind === 'image' ? attach.dataUrl : null;
+    // Fix race condition: jika attach belum siap, baca dari animImgFile langsung
+    if(!imgData && animImgFile){
+      try { imgData = await readFileAs('dataurl', animImgFile); } catch(_) {}
+    }
     pushUser(text, { img: imgData });
     const f = animImgFile; clearComposer();
     await animVideo(f, text, imgData); return;
