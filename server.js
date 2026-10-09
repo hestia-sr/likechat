@@ -534,6 +534,17 @@ app.get('/api/config', (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+/* ---------- Versi aplikasi (untuk notifikasi update APK) ---------- */
+const APP_VERSION = '1.0.0';
+const APP_DOWNLOAD_URL = 'https://likechat.work.gd/download';
+app.get('/api/app-version', (req, res) => {
+  res.json({
+    version: APP_VERSION,
+    url: APP_DOWNLOAD_URL,
+    changelog: 'Performa lebih ringan dan tampilan baru.',
+  });
+});
+
 // ---------- Daftar wallpaper ----------
 const WALLPAPER_DIR = path.join(__dirname, 'assets', 'wallpapers');
 const CAT_LABELS = {
