@@ -188,8 +188,9 @@ button svg{display:block;width:22px;height:22px}
 /* ---------- Lapisan & panel ---------- */
 #scrim{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);opacity:0;transition:opacity .22s}
 #scrim.show{opacity:1}
-aside{position:fixed;top:0;bottom:0;z-index:50;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+aside{position:fixed;top:0;bottom:0;z-index:50;background:#14161c;
   transition:transform .25s ease;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 16px)}
+body.light aside{background:#f0f3f8}
 #drawer{left:12px;top:calc(env(safe-area-inset-top,0px) + 54px);bottom:auto;width:min(78vw,300px);
   max-height:calc(100dvh - 170px);overflow-y:auto;transform:translateX(-115%);
   border:1px solid rgba(255,255,255,.1);border-radius:20px;
