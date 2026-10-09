@@ -1772,5 +1772,50 @@ async function init(){
     try{ const r = await fetch('/api/wallpapers'); WALLS = await r.json(); }catch(e){ WALLS = { categories:[] }; }
     buildWallpapers();
   }, 100);
+  // Cek pembaruan aplikasi
+  setTimeout(checkAppUpdate, 2000);
+}
+
+/* ---------- Cek pembaruan aplikasi ---------- */
+const APP_VERSION = '1.0.0';
+async function checkAppUpdate(){
+  try{
+    const r = await fetch('/api/app-version');
+    const j = await r.json();
+    if(!j.version || j.version === APP_VERSION) return;
+    // Bandingkan versi sederhana
+    const cur = APP_VERSION.split('.').map(Number);
+    const srv = String(j.version).split('.').map(Number);
+    let newer = false;
+    for(let i = 0; i < Math.max(cur.length, srv.length); i++){
+      const a = cur[i] || 0, b = srv[i] || 0;
+      if(b > a){ newer = true; break; }
+      if(b < a) break;
+    }
+    if(newer) showUpdateModal(j);
+  }catch(e){}
+}
+function showUpdateModal(info){
+  // Jangan tampilkan dua kali
+  if(document.getElementById('updateModal')) return;
+  const m = document.createElement('div');
+  m.id = 'updateModal';
+  m.innerHTML =
+    '<div class="update-card">' +
+      '<div class="update-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg></div>' +
+      '<h3>Pembaruan Tersedia</h3>' +
+      '<p class="update-ver">Versi ' + esc(info.version) + ' telah tersedia.</p>' +
+      (info.changelog ? '<p class="update-log">' + esc(info.changelog) + '</p>' : '') +
+      '<div class="update-actions">' +
+        '<button id="updateLater" class="update-btn secondary">Nanti</button>' +
+        '<a id="updateNow" class="update-btn primary" href="' + esc(info.url || '#') + '">Perbarui</a>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('show'));
+  document.getElementById('updateLater').onclick = () => {
+    m.classList.remove('show');
+    setTimeout(() => m.remove(), 300);
+  };
 }
 document.addEventListener('DOMContentLoaded', init);
