@@ -46,8 +46,8 @@ button svg{display:block;width:22px;height:22px}
 #app{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
 #topbar{position:relative;z-index:6;display:flex;align-items:center;justify-content:space-between;
   padding:env(safe-area-inset-top,0px) 14px 0;
-  background:transparent;border:none;box-shadow:none}
-body.light #topbar{background:transparent}
+  background:#101318;border:none;box-shadow:none}
+body.light #topbar{background:#e9edf3}
 
 /* ---------- Tombol ---------- */
 .icon-btn{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -145,8 +145,9 @@ body.light .icon-btn{background:#e2e8f0}
 .msg.ai .zip-link:active{opacity:.7}
 
 /* ---------- Komposer ---------- */
-#composer{position:relative;z-index:5;display:flex;align-items:flex-end;gap:9px;background:transparent;border:none;
+#composer{position:relative;z-index:5;display:flex;align-items:flex-end;gap:9px;background:#101318;border:none;
   padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
+body.light #composer{background:#e9edf3}
 #inputPill{flex:1;background:#1e2129;border-radius:999px;
   padding:9px 18px;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.09);min-width:0;
   transition:border-radius .18s ease}
