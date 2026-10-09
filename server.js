@@ -970,17 +970,18 @@ app.post('/api/image/edit', upload.single('image'), async (req, res) => {
 });
 
 // ---------- Buat video (text2video) ----------
-const KIE_API_KEY = (process.env.KIE_API_KEY || '').trim();
-async function generateVideoKie(prompt){
-  if(!KIE_API_KEY) throw { status: 500, error: 'KIE_API_KEY belum diset' };
+const KIE_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => process.env['KIE_API_KEY_' + i]).filter(Boolean);
+if(process.env.KIE_API_KEY) KIE_KEYS.unshift(process.env.KIE_API_KEY.trim());
+async function generateVideoKie(prompt, kieKey){
+  const body = {
+    model: 'kling-2.6/text-to-video',
+    input: { prompt: String(prompt), duration: 5, aspect_ratio: '9:16' },
+  };
   // 1. Buat task
   const createRes = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
     method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + KIE_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'kling-2.6/text-to-video',
-      input: { prompt: String(prompt), duration: 5, aspect_ratio: '9:16' },
-    }),
+    headers: { 'Authorization': 'Bearer ' + kieKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
   const createJson = await createRes.json();
   const taskId = createJson?.data?.taskId || createJson?.taskId;
@@ -989,7 +990,7 @@ async function generateVideoKie(prompt){
   for(let i = 0; i < 60; i++){
     await new Promise(r => setTimeout(r, 5000));
     const pollRes = await fetch('https://api.kie.ai/api/v1/jobs/recordInfo?taskId=' + encodeURIComponent(taskId), {
-      headers: { 'Authorization': 'Bearer ' + KIE_API_KEY },
+      headers: { 'Authorization': 'Bearer ' + kieKey },
     });
     const pollJson = await pollRes.json();
     const state = pollJson?.data?.state;
@@ -1008,10 +1009,12 @@ app.post('/api/video/generate', async (req, res) => {
   if (!prompt || !String(prompt).trim()) return res.status(400).json({ error: 'prompt kosong' });
   try {
     let url;
-    // Coba Kie.ai dulu jika ada key, fallback ke deapi.ai
-    if(KIE_API_KEY){
-      try{ url = await generateVideoKie(prompt); }
-      catch(kieErr){ console.error('Kie.ai gagal, fallback ke deapi:', kieErr.error || kieErr.message); }
+    // Coba Kie.ai dulu jika ada key (rotasi otomatis), fallback ke deapi.ai
+    if(KIE_KEYS.length){
+      for(const kieKey of KIE_KEYS){
+        try{ url = await generateVideoKie(prompt, kieKey); break; }
+        catch(kieErr){ console.error('Kie.ai key gagal, coba key berikutnya:', kieErr.error || kieErr.message); }
+      }
     }
     if(!url){
       url = await tryKeys(IMAGE_KEYS, async (key) => {
