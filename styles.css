@@ -242,9 +242,11 @@ body.light aside{background:#f0f3f8}
 .acc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .acc-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:rgba(255,255,255,.06)}
 
-#settings{right:0;width:min(50vw,300px);transform:translateX(105%);border-left:1px solid rgba(255,255,255,.08);overflow-y:auto;
-  background:var(--glass);backdrop-filter:blur(14px)}
-#settings.open{transform:none}
+#settings{right:12px;width:min(78vw,300px);border:1px solid rgba(255,255,255,.1);overflow-y:auto;
+  top:50%;bottom:auto;max-height:70vh;border-radius:20px;background:#14161c;
+  transform:translateY(-50%) translateX(115%);transition:transform .25s ease}
+body.light #settings{background:#f0f3f8}
+#settings.open{transform:translateY(-50%) translateX(0)}
 #settings h3{font-size:14px;margin:14px 0 8px;color:var(--ink-dim);font-weight:600;letter-spacing:.5px}
 .wp-cat{margin-bottom:10px}
 .wp-cat>div:first-child{font-size:13px;margin-bottom:6px;color:var(--ink)}
