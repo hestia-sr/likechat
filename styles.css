@@ -164,8 +164,9 @@ body.light #inputPill{background:#ffffff}
 /* Tombol aksi di pesan AI: speaker, salin, ulangi, hapus */
 .ai-actions{display:flex;gap:8px;margin-top:6px}
 .speak-btn{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
-  background:var(--glass);color:var(--ink);backdrop-filter:blur(8px);flex:none;
+  background:#2a2e38;color:var(--ink);flex:none;
   border:1px solid rgba(255,255,255,.12)}
+body.light .speak-btn{background:#e2e8f0}
 .speak-btn svg{width:18px;height:18px}
 .speak-btn:active{transform:scale(.93)}
 .speak-btn.playing{background:var(--btn);color:var(--btn-fg)}
