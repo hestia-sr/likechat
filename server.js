@@ -842,7 +842,7 @@ app.post('/api/chat', async (req, res) => {
     })().catch(() => {});
   } catch (e) {
     res.status(e.status === 401 || e.status === 403 ? 502 : (e.status || 500)).json({
-      error: 'Semua API key gagal. Silakan coba lagi nanti.',
+      error: 'Model Ini Sedang Tidak dapat di gunakan Beralihlah Ke model lain',
     });
   }
 });
