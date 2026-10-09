@@ -1409,9 +1409,12 @@ function bindEvents(){
   $('#attachX').onclick = () => { attach=null; editImgFile=null; animImgFile=null; imgMode=null; setModeChip(); setAttachPreview(); };
 
   // Ketuk di luar pesan yang sedang dipilih -> matikan mode pilih
+  let hasSelectable = false;
   document.addEventListener('click', e => {
     if(e.target.closest && e.target.closest('.ai-actions')) return;
     if(e.target.closest && e.target.closest('.msg.ai.selectable')) return;
+    if(!hasSelectable) return;
+    hasSelectable = false;
     document.querySelectorAll('.msg.ai.selectable').forEach(d => d.classList.remove('selectable'));
     document.querySelectorAll('.ai-actions [data-act="select"].active').forEach(b => b.classList.remove('active'));
     const sel = window.getSelection();
@@ -1515,6 +1518,7 @@ function bindEvents(){
           document.querySelectorAll('.ai-actions [data-act="select"].active').forEach(b => b.classList.remove('active'));
           div.classList.add('selectable');
           ab.classList.add('active');
+          hasSelectable = true;
           // Langsung pilih semua teks agar gagang seleksi muncul
           try{
             const sel = window.getSelection();
