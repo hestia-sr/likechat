@@ -1752,18 +1752,21 @@ async function init(){
   try{ const r = await fetch('/api/config'); const j = await r.json(); if(j.models && j.models.length) CFG = j; }catch(e){}
   if(typeof SET.model === 'number') SET.model = (CFG.models[SET.model]||CFG.models[0]||{}).id || null;
   if(!CFG.models.some(m => m.id===SET.model)) SET.model = (CFG.models[0]||{}).id || null;
-  buildModelMenu(); applyColor(); buildColors(); applyWallpaper(); applyMode(); applyLang();
+  buildModelMenu(); applyColor(); buildColors(); applyMode(); applyLang();
   document.querySelectorAll('#modeRow button').forEach(b => b.onclick = () => {
     SET.mode = b.dataset.mode; save('lc_set', SET); applyMode();
   });
   document.querySelectorAll('#langRow button').forEach(b => b.onclick = () => {
     SET.lang = b.dataset.lang; save('lc_set', SET); applyLang();
   });
-  try{ const r = await fetch('/api/wallpapers'); WALLS = await r.json(); }catch(e){ WALLS = { categories:[] }; }
-  buildWallpapers();
   bindEvents();
   if(!CHATS.length) newChat();
   else { cur = CHATS[0]; renderAll(); renderHistory(); }
   autogrow();
+  // Wallpaper dimuat belakangan biar startup ringan
+  setTimeout(async () => {
+    try{ const r = await fetch('/api/wallpapers'); WALLS = await r.json(); }catch(e){ WALLS = { categories:[] }; }
+    buildWallpapers(); applyWallpaper();
+  }, 100);
 }
 document.addEventListener('DOMContentLoaded', init);
