@@ -44,7 +44,7 @@ button svg{display:block;width:22px;height:22px}
 
 /* ---------- Kerangka ---------- */
 #app{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
-#topbar{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;align-items:center;justify-content:space-between;
+#topbar{position:fixed;top:0;left:0;right:0;z-index:6;display:flex;align-items:center;justify-content:space-between;
   padding:env(safe-area-inset-top,0px) 14px 0;
   background:transparent;border:none;box-shadow:none;pointer-events:none}
 #topbar button{pointer-events:auto}
@@ -147,7 +147,7 @@ body.light .icon-btn{background:#e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,.15)}
 .msg.ai .zip-link:active{opacity:.7}
 
 /* ---------- Komposer ---------- */
-#composer{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:flex-end;gap:9px;background:transparent;border:none;
+#composer{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:flex-end;gap:9px;background:transparent;border:none;
   padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 12px);pointer-events:none}
 #composer button,#composer #inputPill{pointer-events:auto}
 #inputPill{flex:1;background:#1e2129;border-radius:999px;
