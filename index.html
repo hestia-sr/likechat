@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>LikeChat</title>
-<link rel="stylesheet" href="styles.css?v=20261009e">
+<link rel="stylesheet" href="styles.css?v=20261009f">
 <link rel="icon" href="assets/logo.jpg">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -103,8 +103,10 @@
   <button class="icon-btn panel-x" data-close="accountPanel" data-i18n-aria="close" aria-label="Tutup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
   <div class="acc-profile">
     <img id="accPhoto" class="acc-photo" data-i18n-alt="profilePhoto" alt="Foto profil">
-    <div id="accName" class="acc-name"></div>
-    <div id="accEmail" class="acc-email"></div>
+    <div class="acc-idwrap">
+      <div id="accName" class="acc-name"></div>
+      <div id="accEmail" class="acc-email"></div>
+    </div>
   </div>
   <nav class="drawer-nav">
     <button class="drawer-item" id="accFilesBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span data-i18n="savedFiles">File Tersimpan</span></button>
