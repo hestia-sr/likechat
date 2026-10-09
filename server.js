@@ -632,6 +632,7 @@ function buildIdentity(label) {
     'Kode program selalu tulis dalam blok triple-backtick disertai nama bahasa. ' +
     'ATURAN KERAS JUMLAH FILE (wajib dipatuhi): Jika pengguna minta "1 file" atau "satu file", WAJIB berikan tepat SATU blok kode dan tidak boleh lebih. Semua CSS harus di dalam tag <style> di file HTML itu, semua JavaScript di dalam tag <script>. DILARANG membuat blok css/js terpisah. DILARANG membuat file server.js, style.css, atau file lain. Hanya satu file HTML. Jika minta "2 file" atau "3 file", berikan tepat sejumlah itu, tidak lebih. ' +
     'STANDAR DESAIN (wajib untuk setiap web yang dibuat): Hasil harus cantik, rapi, dan modern. Gunakan: (1) Warna harmonis — gradient atau palet yang konsisten, hindari warna bertabrakan. (2) Typography jelas — font sans-serif, ukuran hierarkis, line-height cukup. (3) Spacing lega — padding/margin cukup, jangan menempel. (4) Layout terstruktur — header, konten, footer jelas. (5) Tidak ada teks bertumpuk/overlap. (6) Responsive — tampil baik di HP. (7) Sentuhan modern — border-radius, shadow halus, transisi lembut. ' +
+    'GAMBAR OTOMATIS (wajib jika web butuh gambar produk/foto): Jika website yang dibuat membutuhkan gambar nyata (mis. foto produk toko, galeri, avatar), JANGAN pakai URL gambar dari internet dan JANGAN pakai emoji sebagai pengganti. Tulis src dengan placeholder persis format ini: {{GAMBAR: deskripsi singkat dalam bahasa Inggris}}. Contoh: <img src="{{GAMBAR: white cotton t-shirt on hanger, product photo}}">. Aplikasi akan otomatis mengganti placeholder itu dengan foto AI yang digenerate. Satu placeholder untuk satu gambar; bedakan deskripsinya tiap gambar. ' +
     'Aturan tampilan kode di aplikasi: (1) Jika hanya 1 file HTML, JANGAN sebut soal unduh ZIP — cukup katakan pengguna bisa melihat hasilnya lewat tombol Preview. ' +
     '(2) Jika 2-3 file, JANGAN sebut soal unduh ZIP — kode ditampilkan langsung. ' +
     '(3) HANYA jika kode sangat panjang (4 file atau lebih), awali jawaban dengan: "Saya sudah membuatkan seluruh kodenya dalam file ZIP, silakan unduh." ' +
@@ -904,6 +905,32 @@ app.post('/api/image/generate', async (req, res) => {
     res.json({ url });
   } catch (e) {
     res.status(e.status || 500).json({ error: (e.error || e.message || 'tidak dikenal') });
+  }
+});
+
+// ---------- Isi placeholder {{GAMBAR:...}} otomatis (dipakai setelah codex selesai) ----------
+app.post('/api/image/fill', async (req, res) => {
+  if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk membuat gambar.' });
+  const { prompts } = req.body || {};
+  if (!Array.isArray(prompts) || !prompts.length) return res.status(400).json({ error: 'prompts kosong' });
+  const uniq = [...new Set(prompts.map(p => String(p || '').trim()).filter(Boolean))].slice(0, 8);
+  if (!uniq.length) return res.status(400).json({ error: 'prompts kosong' });
+  try {
+    const results = await Promise.all(uniq.map(async (prompt) => {
+      try {
+        const url = await tryKeys(IMAGE_KEYS, async (key) => {
+          const body = { model: IMAGE_MODEL, prompt, width: IMAGE_WIDTH, height: IMAGE_HEIGHT, steps: IMAGE_STEPS };
+          if (IMAGE_SEED !== undefined) body.seed = IMAGE_SEED;
+          return await submitDeapiJob(key, IMAGE_GEN_URL, JSON.stringify(body), false);
+        });
+        return { prompt, url };
+      } catch (e) {
+        return { prompt, url: null, error: (e.error || e.message || 'gagal') };
+      }
+    }));
+    res.json({ images: results });
+  } catch (e) {
+    res.status(500).json({ error: 'gagal generate gambar' });
   }
 });
 
