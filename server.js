@@ -970,20 +970,60 @@ app.post('/api/image/edit', upload.single('image'), async (req, res) => {
 });
 
 // ---------- Buat video (text2video) ----------
+const KIE_API_KEY = (process.env.KIE_API_KEY || '').trim();
+async function generateVideoKie(prompt){
+  if(!KIE_API_KEY) throw { status: 500, error: 'KIE_API_KEY belum diset' };
+  // 1. Buat task
+  const createRes = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + KIE_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'kling-2.6/text-to-video',
+      input: { prompt: String(prompt), duration: 5, aspect_ratio: '9:16' },
+    }),
+  });
+  const createJson = await createRes.json();
+  const taskId = createJson?.data?.taskId || createJson?.taskId;
+  if(!taskId) throw { status: 500, error: 'Gagal membuat task Kie.ai' };
+  // 2. Poll hingga selesai (maks 5 menit)
+  for(let i = 0; i < 60; i++){
+    await new Promise(r => setTimeout(r, 5000));
+    const pollRes = await fetch('https://api.kie.ai/api/v1/jobs/recordInfo?taskId=' + encodeURIComponent(taskId), {
+      headers: { 'Authorization': 'Bearer ' + KIE_API_KEY },
+    });
+    const pollJson = await pollRes.json();
+    const state = pollJson?.data?.state;
+    if(state === 'success'){
+      const urls = pollJson?.data?.resultJson ? JSON.parse(pollJson.data.resultJson).resultUrls : null;
+      if(urls && urls.length) return urls[0];
+      throw { status: 500, error: 'Video selesai tapi URL tidak ditemukan' };
+    }
+    if(state === 'fail') throw { status: 500, error: pollJson?.data?.failMsg || 'Kie.ai gagal' };
+  }
+  throw { status: 500, error: 'Timeout menunggu video' };
+}
 app.post('/api/video/generate', async (req, res) => {
   if (guestBlocked(req)) return res.status(403).json({ error: 'Login dengan Google untuk membuat video.' });
   const { prompt } = req.body || {};
   if (!prompt || !String(prompt).trim()) return res.status(400).json({ error: 'prompt kosong' });
   try {
-    const url = await tryKeys(IMAGE_KEYS, async (key) => {
-      const body = {
-        model: VIDEO_MODEL, prompt: String(prompt),
-        width: VIDEO_WIDTH, height: VIDEO_HEIGHT,
-        seed: Math.floor(Math.random() * 1000000),
-        frames: VIDEO_FRAMES, fps: VIDEO_FPS, steps: 1,
-      };
-      return await submitDeapiJob(key, VIDEO_GEN_URL, JSON.stringify(body), false);
-    });
+    let url;
+    // Coba Kie.ai dulu jika ada key, fallback ke deapi.ai
+    if(KIE_API_KEY){
+      try{ url = await generateVideoKie(prompt); }
+      catch(kieErr){ console.error('Kie.ai gagal, fallback ke deapi:', kieErr.error || kieErr.message); }
+    }
+    if(!url){
+      url = await tryKeys(IMAGE_KEYS, async (key) => {
+        const body = {
+          model: VIDEO_MODEL, prompt: String(prompt),
+          width: VIDEO_WIDTH, height: VIDEO_HEIGHT,
+          seed: Math.floor(Math.random() * 1000000),
+          frames: VIDEO_FRAMES, fps: VIDEO_FPS, steps: 1,
+        };
+        return await submitDeapiJob(key, VIDEO_GEN_URL, JSON.stringify(body), false);
+      });
+    }
     res.json({ url });
   } catch (e) {
     res.status(e.status || 500).json({ error: (e.error || e.message || 'tidak dikenal') });
