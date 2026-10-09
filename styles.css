@@ -11,7 +11,6 @@ body.light{--ink:#1b1f27;--ink-dim:rgba(27,31,39,.85);
   --glass:rgba(255,255,255,.66);--glass2:rgba(27,31,39,.08);
   background:#e9edf3}
 body.light #wallpaper{background:linear-gradient(160deg,#dde4ef,#f5f7fb)}
-body.light #topbar{background:rgba(255,255,255,.42)}
 body.light .app-title{text-shadow:0 2px 12px rgba(255,255,255,.7)}
 body.light .msg.ai{text-shadow:0 1px 8px rgba(255,255,255,.75)}
 body.light .msg.ai a,body.light #infoPanel a{color:#0b5ed7}
