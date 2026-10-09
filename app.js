@@ -646,6 +646,45 @@ function updateAiMsg(div, m){
   if(m.text && !streaming) div.appendChild(speakBtnEl(div.dataset.idx));
 }
 
+/* ---------- Gambar otomatis: isi {{GAMBAR:...}} setelah AI selesai ---------- */
+async function fillImagePlaceholders(div, ai, idx){
+  const re = /\{\{\s*GAMBAR\s*:\s*([^}]+)\}\}/g;
+  const prompts = [];
+  const seen = new Set();
+  let m;
+  while((m = re.exec(ai.text))){ const p = m[1].trim(); if(p && !seen.has(p)){ seen.add(p); prompts.push(p); } }
+  if(!prompts.length) return;
+  const note = document.createElement('div');
+  note.className = 'imgfill-note';
+  note.textContent = 'Membuat ' + prompts.length + ' gambar otomatis...';
+  div.appendChild(note);
+  try{
+    const r = await fetch('/api/image/fill', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prompts })
+    });
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error((j && j.error) || ('Server '+r.status));
+    const urlByPrompt = {};
+    for(const im of (j.images||[])){ if(im.url) urlByPrompt[im.prompt] = im.url; }
+    const text = ai.text.replace(/\{\{\s*GAMBAR\s*:\s*([^}]+)\}\}/g, (full, p) => urlByPrompt[p.trim()] || full);
+    if(text !== ai.text){
+      ai.text = text;
+      const cur = cur.messages[idx];
+      if(cur === ai){
+        const el = msgsEl.querySelector('.msg.ai[data-idx="'+idx+'"]');
+        if(el) updateAiMsg(el, ai);
+      }
+      saveChats();
+    }
+  }catch(e){
+    note.textContent = 'Gagal membuat gambar otomatis: ' + e.message + ' (login dulu untuk fitur gambar)';
+    setTimeout(()=>{ try{ note.remove(); }catch(_){} }, 6000);
+    return;
+  }
+  try{ note.remove(); }catch(e){}
+}
+
 /* ---------- Suara AI: tombol speaker -> /api/speak (Deepgram TTS) ---------- */
 const SVG_SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 const SVG_SPEAKER_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>';
@@ -810,6 +849,11 @@ async function chatAI(fileModel){
   }finally{
     streaming = false; aborter = null; setStopUI(false);
     updateAiMsg(div, ai); maybeScroll(); saveChats();
+    // Gambar otomatis: isi {{GAMBAR:...}} di background tanpa blokir UI
+    if(ai.text && /\{\{\s*GAMBAR\s*:/.test(ai.text)){
+      const idx = parseInt(div.dataset.idx, 10);
+      if(Number.isFinite(idx)) fillImagePlaceholders(div, ai, idx);
+    }
   }
 }
 
