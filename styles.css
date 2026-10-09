@@ -46,11 +46,13 @@ button svg{display:block;width:22px;height:22px}
 #app{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
 #topbar{position:relative;z-index:6;display:flex;align-items:center;justify-content:space-between;
   padding:env(safe-area-inset-top,0px) 14px 0;
-  background:rgba(20,22,28,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  background:#14161c}
+body.light #topbar{background:#f0f3f8}
 
 /* ---------- Tombol ---------- */
 .icon-btn{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:var(--glass);color:var(--ink);backdrop-filter:blur(8px);flex:none;touch-action:manipulation}
+  background:#2a2e38;color:var(--ink);flex:none;touch-action:manipulation}
+body.light .icon-btn{background:#e2e8f0}
 .icon-btn:active{transform:scale(.93)}
 .circle-btn{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   background:var(--btn);color:var(--btn-fg);flex:none;box-shadow:0 4px 14px rgba(0,0,0,.35)}
@@ -145,9 +147,10 @@ button svg{display:block;width:22px;height:22px}
 /* ---------- Komposer ---------- */
 #composer{position:relative;z-index:5;display:flex;align-items:flex-end;gap:9px;
   padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
-#inputPill{flex:1;background:var(--glass2);backdrop-filter:blur(12px);border-radius:999px;
+#inputPill{flex:1;background:#1e2129;border-radius:999px;
   padding:9px 18px;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.09);min-width:0;
   transition:border-radius .18s ease}
+body.light #inputPill{background:#ffffff}
 #inputPill.tall{border-radius:22px}
 #input{width:100%;background:none;border:none;outline:none;resize:none;color:var(--ink);
   font-size:16px;line-height:1.45;max-height:150px;font-family:inherit}
