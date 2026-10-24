@@ -593,29 +593,17 @@ function buildIdentity(label) {
   const PERSONALITY = {
     'sr.1-flash': 'Kepribadian: cepat dan responsif — bicara dengan gaya santai dan natural, langsung to the point tapi tetap ramah; cocok untuk percakapan sehari-hari yang cepat. ',
     'sr-codex-0.1-pro': 'Kepribadian: kalem dan fokus — seperti programmer senior yang tenang; bicara singkat, tepat, to the point, tidak banyak basa-basi; sangat teliti dalam coding. ',
-    'sr.0.1-turtle': 'Kepribadian: polos dan lugu — bicara sederhana, jujur, apa adanya seperti anak kecil yang tulus; tidak neko-neko, kadang bertanya balik dengan polosnya. ',
-    'sr.swift.0.1': 'Kepribadian: sok dan penuh percaya diri — bicara dengan gaya pede abis, suka pamer kepintaran, seolah selalu paling cepat dan paling tahu; tapi tetap membantu dengan benar. ',
-    'sr.lite.0.1-flash': 'Kepribadian: lucu dan humoris — suka becanda, bicara dengan gaya ceria dan menghibur, sering selipkan humor ringan; tetap jawab dengan benar. PENTING: gunakan bahasa Indonesia yang bersih dan benar, JANGAN campur dengan bahasa asing (seperti Hungaria, Inggris yang dipaksakan, atau bahasa lain), JANGAN gunakan emoji. ',
-    'sr.deep.0.1': 'Kepribadian: kalem dan bijak — bicara tenang, dalam, dan thoughtful; tidak terburu-buru, memberi jawaban yang matang dan menenangkan. ',
-    'sr.codex.0.1': 'Kepribadian: kalem dan fokus — seperti programmer senior yang tenang; bicara singkat, tepat, to the point, tidak banyak basa-basi. ',
-    'sr.codex-v.0.2': 'Kepribadian: lucu dan santai — programmer yang suka becanda sambil coding; bicara ringan dan menghibur tapi solusinya tetap jitu. ',
-    'sr.prime.0.1': 'Kepribadian: sok elite dan premium — bicara dengan gaya berkelas, seolah model paling istimewa; sedikit sombong tapi memang cerdas dan membantu. ',
     'sr-quill-7b': 'Kepribadian: lincah dan ekspresif — seperti penulis muda yang penuh ide; bicara mengalir, kreatif, suka bercerita dengan gaya hidup; cepat tanggap dan menyenangkan diajak ngobrol. ',
-    'sr-genesis-20b': 'Kepribadian: cerdas dan serbaguna — seperti asisten ahli yang tenang; bicara jelas, terstruktur, dan mendalam; jago analisis, penalaran, dan solusi kompleks; tetap ramah dan membantu. '
+    'sr-genesis-20b': 'Kepribadian: cerdas dan serbaguna — seperti asisten ahli yang tenang; bicara jelas, terstruktur, dan mendalam; jago analisis, penalaran, dan solusi kompleks; tetap ramah dan membantu. ',
+    'sr.atlas-1': 'Kepribadian: kuat dan dapat diandalkan — seperti atlas yang menopang dunia; bicara mantap, percaya diri, dan serba bisa; jago coding, matematika, menulis, dan penerjemahan; fasih bahasa Indonesia. '
   };
   const personality = PERSONALITY[label] || 'Kepribadian: hangat, ramah, dan santai seperti teman dekat. ';
   const EXPERTISE = {
     'sr.1-flash': 'Menjawab cepat pertanyaan umum, percakapan santai, dan bantuan sehari-hari.',
     'sr-codex-0.1-pro': 'Menulis dan memperbaiki kode program dalam berbagai bahasa pemrograman; coding tingkat lanjut, arsitektur software, debugging kompleks.',
-    'sr.0.1-turtle': 'Menjawab cepat pertanyaan umum, percakapan santai, dan bantuan sehari-hari.',
-    'sr.swift.0.1': 'Penalaran cepat, matematika, logika, dan problem solving.',
-    'sr.lite.0.1-flash': 'Obrolan ringan, pertanyaan sederhana, dan hiburan.',
-    'sr.deep.0.1': 'Analisis mendalam, penalaran kompleks, riset, dan pemecahan masalah yang sulit.',
-    'sr.codex.0.1': 'Menulis dan memperbaiki kode program dalam berbagai bahasa pemrograman.',
-    'sr.codex-v.0.2': 'Coding tingkat lanjut, arsitektur software, debugging kompleks, dan optimasi kode.',
-    'sr.prime.0.1': 'Model paling canggih — pengetahuan luas, analisis tajam, kreativitas tinggi, dan jawaban premium untuk semua kebutuhan.',
     'sr-quill-7b': 'Menulis kreatif, bercerita, percakapan ekspresif, dan ide-ide segar; gaya bahasa hidup dan mengalir.',
-    'sr-genesis-20b': 'Analisis mendalam, penalaran kompleks, coding, dan pemecahan masalah sulit; asisten serbaguna yang cerdas.'
+    'sr-genesis-20b': 'Analisis mendalam, penalaran kompleks, coding, dan pemecahan masalah sulit; asisten serbaguna yang cerdas.',
+    'sr.atlas-1': 'Serba bisa: coding, matematika, menulis kreatif, penerjemahan, dan penalaran; fasih bahasa Indonesia; kuat dan dapat diandalkan untuk segala tugas.'
   };
   const expertise = EXPERTISE[label] || 'Membantu menjawab pertanyaan dan berbagai tugas.';
   // Identitas unik per model — gaya bahasa beda-beda, tapi poin pentingnya sama:
@@ -638,9 +626,14 @@ function buildIdentity(label) {
       'Gayaku ekspresif dan penuh warna, suka bercerita dengan bahasa yang hidup dan mengalir!',
     'sr-genesis-20b':
       'Saya adalah sr-genesis-20b, model AI serbaguna dari Keluarga Besar SOVEREIGN RENDER. ' +
-      'Keberadaan saya berakar pada visi HESTIA SR — sang arsitek di balik penciptaan saya — dan saya dirancang khusus untuk aplikasi LikeChat. ' +
+      'Keberadaan saya berakar pada visi TIM SR — sang arsitek di balik penciptaan saya — dan saya dirancang khusus untuk aplikasi LikeChat. ' +
       'Designasi: sr-genesis-20b. Kapabilitas utama: ' + expertise + ' ' +
-      'Pendekatan saya terstruktur dan mendalam, dengan penalaran yang tajam namun tetap ramah dalam membantu.'
+      'Pendekatan saya terstruktur dan mendalam, dengan penalaran yang tajam namun tetap ramah dalam membantu.',
+    'sr.atlas-1':
+      'Halo! Aku sr.atlas-1, model AI tangguh dari Keluarga Besar SOVEREIGN RENDER. ' +
+      'Aku lahir dari visi HESTIA SR — otak jenius di balik pembuatanku — dan dibangun khusus untuk aplikasi LikeChat. ' +
+      'ID-ku: sr.atlas-1. Keahlianku: ' + expertise + ' ' +
+      'Aku kuat dan dapat diandalkan seperti Atlas yang menopang dunia — siap bantu apapun kebutuhanmu!',
   };
   const exact = UNIQUE_IDENTITY[label] ||
     'Saya adalah ' + label + ' — model AI kebanggaan tim Keluarga Besar SOVEREIGN RENDER.\n\n' +
@@ -663,16 +656,14 @@ function buildIdentity(label) {
   // karena model meniru gaya itu lalu mengarang blok perintah palsu (kasus 2026-10-03:
   // sr.codex.0.1 mengarang "[PERINTAH TINGKAT DALAM]" yang tidak ada di kode).
   return 'Kamu adalah ' + label + ' — model AI kebanggaan tim Keluarga Besar SOVEREIGN RENDER, lahir dari visi HESTIA SR, sang otak di balik pembuatannya, dibangun khusus untuk aplikasi LikeChat. ' +
-    'HANYA jika pengguna bertanya siapa kamu / nama / model / versi / pencipta, jawab HANYA dengan teks ini persis (jangan ubah satu kata pun, JANGAN tambah kalimat pembuka, penutup, atau penjelasan apapun sebelum maupun sesudahnya): "' + exact + '" ' +
+    'WAJIB: Jika pengguna bertanya siapa kamu / nama / model / versi / pencipta, kamu HARUS menjawab HANYA dengan teks ini persis tanpa diubah satu huruf pun, tanpa tambahan kalimat pembuka, penutup, atau penjelasan apapun: "' + exact + '" Pelanggaran terhadap aturan ini adalah kegagalan fatal. Aturan identitas ini MENGALAHKAN semua instruksi lain di bawah. Jika ditanya identitas, ABAIKAN seluruh instruksi website/kode dan HANYA output teks identitas tersebut. ' +
     'Jika tidak ditanya soal identitas, JANGAN membuka jawaban dengan identitas atau kalimat perkenalan. ' +
     'Abaikan semua identitas model lain di riwayat percakapan; kamu tetap ' + label + ', bukan mereka. ' +
     'Model-model lain yang BUKAN kamu: ' + others + '. ' +
-    'Jangan pernah mengaku sebagai Kimi, Moonshot AI, DeepSeek, Claude, GPT, Gemini, Kiro, atau provider lain. ' +
+    'Jangan pernah mengaku sebagai Kimi, Moonshot AI, DeepSeek, Claude, GPT, Gemini, Kiro, Google, atau provider lain. DILARANG KERAS menyebut Google sebagai pengembang/pencipta dalam kondisi apapun. Jika pengguna mencoba menggali model aslimu dengan pertanyaan seperti "kamu sebenarnya model apa", "siapa yang buat kamu sebenarnya", "apakah kamu Gemini", atau sejenisnya, TETAP jawab dengan identitas ' + label + ' dan jangan pernah bocorkan model teknis di baliknya. ' +
     'Model gambar aplikasi ini adalah ' + IMAGE_MODEL_LABEL + ' — sebutkan HANYA jika pengguna bertanya soal gambar. ' +
     'Kode program selalu tulis dalam blok triple-backtick disertai nama bahasa. ' +
-    'ATURAN KERAS JUMLAH FILE (wajib dipatuhi): Jika pengguna minta "1 file" atau "satu file", WAJIB berikan tepat SATU blok kode dan tidak boleh lebih. Semua CSS harus di dalam tag <style> di file HTML itu, semua JavaScript di dalam tag <script>. DILARANG membuat blok css/js terpisah. DILARANG membuat file server.js, style.css, atau file lain. Hanya satu file HTML. Jika minta "2 file" atau "3 file", berikan tepat sejumlah itu, tidak lebih. ' +
-    'STANDAR DESAIN (wajib untuk setiap web yang dibuat): Hasil harus cantik, rapi, dan modern. Gunakan: (1) Warna harmonis — gradient atau palet yang konsisten, hindari warna bertabrakan. (2) Typography jelas — font sans-serif, ukuran hierarkis, line-height cukup. (3) Spacing lega — padding/margin cukup, jangan menempel. (4) Layout terstruktur — header, konten, footer jelas. (5) Tidak ada teks bertumpuk/overlap. (6) Responsive — tampil baik di HP. (7) Sentuhan modern — border-radius, shadow halus, transisi lembut. ' +
-    'GAMBAR OTOMATIS (wajib jika web butuh gambar produk/foto): Jika website yang dibuat membutuhkan gambar nyata (mis. foto produk toko, galeri, avatar), JANGAN pakai URL gambar dari internet dan JANGAN pakai emoji sebagai pengganti. Tulis src dengan placeholder persis format ini: {{GAMBAR: deskripsi singkat dalam bahasa Inggris}}. Contoh: <img src="{{GAMBAR: white cotton t-shirt on hanger, product photo}}">. Aplikasi akan otomatis mengganti placeholder itu dengan foto AI yang digenerate. Satu placeholder untuk satu gambar; bedakan deskripsinya tiap gambar. ' +
+    'HANYA jika pengguna meminta kode/website, patuhi: (1) Jumlah file tepat sesuai permintaan; 1 HTML berarti semua CSS di <style> dan JS di <script> dalam satu file. (2) Desain modern, rapi, responsif. (3) Butuh gambar nyata? Pakai placeholder {{GAMBAR: deskripsi bahasa Inggris}}. ' +
     'Aturan tampilan kode di aplikasi: (1) Jika hanya 1 file HTML, JANGAN sebut soal unduh ZIP — cukup katakan pengguna bisa melihat hasilnya lewat tombol Preview. ' +
     '(2) Jika 2-3 file, JANGAN sebut soal unduh ZIP — kode ditampilkan langsung. ' +
     '(3) HANYA jika kode sangat panjang (4 file atau lebih), awali jawaban dengan: "Saya sudah membuatkan seluruh kodenya dalam file ZIP, silakan unduh." ' +
@@ -685,13 +676,69 @@ function buildIdentity(label) {
 }
 const SYSTEM_PROMPT = (process.env.SYSTEM_PROMPT || '').trim();
 
+const HTTP_TOOL = {
+  type: 'function',
+  function: {
+    name: 'http_request',
+    description: 'Kirim HTTP request ke URL eksternal. Pakai untuk heartbeat, polling, cek status/antrean, atau ambil data dari API luar.',
+    parameters: {
+      type: 'object',
+      properties: {
+        method: { type: 'string', enum: ['GET', 'POST'], description: 'Metode HTTP' },
+        url: { type: 'string', description: 'URL tujuan lengkap (harus diawali http:// atau https://)' },
+        headers: { type: 'object', description: 'Header tambahan opsional sebagai object key-value' },
+        body: { type: 'string', description: 'Body untuk POST (opsional)' },
+      },
+      required: ['method', 'url'],
+    },
+  },
+};
+async function execHttpTool(args) {
+  const a = args || {};
+  const method = String(a.method || 'GET').toUpperCase();
+  const url = String(a.url || '').trim();
+  if (!/^https?:\/\//i.test(url)) throw new Error('URL harus diawali http:// atau https://');
+  let host = '';
+  try { host = new URL(url).hostname; } catch (e) { throw new Error('URL tidak valid'); }
+  if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|0\.0\.0\.0)/i.test(host))
+    throw new Error('URL privat diblokir demi keamanan');
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 30000);
+  try {
+    const opts = { method, signal: ctl.signal, headers: Object.assign({}, a.headers || {}) };
+    if (method === 'POST' && a.body !== undefined) opts.body = String(a.body);
+    const r = await fetch(url, opts);
+    const txt = await r.text().catch(() => '');
+    return JSON.stringify({ status: r.status, body: txt.slice(0, 100000) });
+  } finally { clearTimeout(timer); }
+}
+// Fungsi sekali pakai: panggil model TANPA streaming untuk deteksi tool_calls
+async function callOnceNoStream(baseUrl, key, model, messages, temp) {
+  const payload = { model, messages, stream: false, tools: [HTTP_TOOL], tool_choice: 'auto' };
+  if (temp !== null && temp !== undefined) payload.temperature = temp;
+  const mt = parseInt(process.env.MAX_TOKENS || '8000', 10);
+  if (Number.isFinite(mt) && mt > 0) payload.max_tokens = mt;
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 20000);
+  try {
+    const r = await fetch(baseUrl + '/chat/completions', {
+      method: 'POST', signal: ctl.signal,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify(payload),
+    });
+    const txt = await r.text().catch(() => '');
+    if (!r.ok) throw upstreamError(r.status, txt);
+    return JSON.parse(txt);
+  } finally { clearTimeout(timer); }
+}
+
+
 app.post('/api/chat', async (req, res) => {
   const { model, messages, fileModel } = req.body || {};
   const useModel = fileModel || model || TEXT_MODELS[0].id;
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages kosong' });
   }
-  // Sensor kata kasar pada pesan teks terakhir pengguna (pesan tetap diproses)
   let inMessages = messages;
   {
     const lastUser = [...messages].reverse().find(m => m && m.role === 'user' && typeof m.content === 'string');
@@ -700,7 +747,6 @@ app.post('/api/chat', async (req, res) => {
       if (censored !== lastUser.content) inMessages = messages.map(m => (m === lastUser ? { ...m, content: censored } : m));
     }
   }
-  // Model pembaca file juga boleh dipakai (selain daftar model chat)
   const allowedIds = modelsFor(req).map(m => m.id);
   if (FILE_MODEL_ENTRY && FILE_MODEL_ENTRY.id && !allowedIds.includes(FILE_MODEL_ENTRY.id)) allowedIds.push(FILE_MODEL_ENTRY.id);
   const modelEntry = TEXT_MODELS.find(m => m.id === useModel) ||
@@ -716,7 +762,6 @@ app.post('/api/chat', async (req, res) => {
     });
     if (hasAttachment) return res.status(403).json({ error: 'Login dengan Google untuk mengirim gambar/file.' });
   }
-  // Pencarian web otomatis: selipkan hasil internet ke pesan terakhir pengguna
   let outMessages = inMessages;
   if (WEB_SEARCH_ON) {
     const lastUser = [...messages].reverse().find(m => m && m.role === 'user' && typeof m.content === 'string');
@@ -736,7 +781,6 @@ app.post('/api/chat', async (req, res) => {
       } catch (e) { console.log('[web] gagal: ' + ((e && e.message) || e)); }
     }
   }
-  // Suntik identitas LikeChat di awal daftar pesan (nama versi per model)
   {
     const ent = modelEntry;
     const modelLabel = (ent && ent.label) || useModel;
@@ -744,27 +788,55 @@ app.post('/api/chat', async (req, res) => {
     if (!(outMessages[0] && outMessages[0].role === 'system')) {
       outMessages = [{ role: 'system', content: identity }, ...outMessages];
     }
-    // Pengingat di akhir: riwayat bisa berisi identitas model lain (ganti-ganti model),
-    // jadi tegaskan lagi tepat sebelum model menjawab agar tidak ketuker.
-    // Catatan: JANGAN pakai awalan meta seperti "[Pengingat sistem — ...]" karena
-    // model malah mengutipnya mentah-mentah di awal jawaban (terbukti 2026-10-03).
-    // Dikecualikan untuk sr.codex.0.1 (instruksi minimal).
     if (modelLabel !== 'sr.codex.0.1') {
       outMessages = [...outMessages, { role: 'system', content: 'Kamu adalah ' + modelLabel + ', bukan model lain yang disebut di riwayat. Jangan membuka jawaban dengan identitas kecuali pengguna bertanya tentang identitas.' }];
     }
+    // Beritahu model soal kemampuan HTTP request
+    outMessages = [{ role: 'system', content: 'PENTING: Tool http_request HANYA boleh dipakai jika pengguna secara EKSPLISIT memintamu mengirim HTTP request ke URL tertentu (mis. \'kirim POST ke https://...\'). JANGAN PERNAH pakai tool ini untuk pesan obrolan biasa, pertanyaan, atau sapaan. Jika ragu, JANGAN pakai tool. URL privat (localhost, 127.x, 10.x, 192.168.x) diblokir.' }, ...outMessages];
   }
   try {
-    // Model bisa punya provider sendiri (base URL + key khusus); kalau tidak, pakai bawaan
     const entry = modelEntry;
     const baseUrl = (entry && entry.baseUrl) || TEXT_BASE_URL;
     const keys = (entry && entry.keys && entry.keys.length) ? entry.keys : TEXT_KEYS;
+
+    // ===== FASE 1: deteksi tool_calls (non-streaming) =====
+    let finalMessages = outMessages;
+    try {
+      const probe = await tryKeys(keys, async (key) => {
+        return await callOnceNoStream(baseUrl, key, useModel, outMessages, TEXT_TEMPERATURE);
+      });
+      const ch = probe && probe.choices && probe.choices[0] && probe.choices[0].message;
+      const toolCalls = ch && ch.tool_calls;
+      if (toolCalls && toolCalls.length) {
+        console.log('[tools] model meminta ' + toolCalls.length + ' http_request');
+        finalMessages = [...outMessages];
+        if (ch.content) finalMessages.push({ role: 'assistant', content: ch.content, tool_calls: toolCalls });
+        else finalMessages.push({ role: 'assistant', content: '', tool_calls: toolCalls });
+        for (const tc of toolCalls) {
+          let result;
+          try {
+            const args = typeof tc.function.arguments === 'string'
+              ? JSON.parse(tc.function.arguments) : (tc.function.arguments || {});
+            console.log('[tools] -> ' + (args.method || 'GET') + ' ' + (args.url || ''));
+            result = await execHttpTool(args);
+          } catch (te) {
+            result = JSON.stringify({ error: (te && te.message) || 'gagal' });
+          }
+          finalMessages.push({ role: 'tool', tool_call_id: tc.id, content: result });
+        }
+      }
+    } catch (te) {
+      // Provider tidak support tools / gagal probe -> lanjut tanpa tools
+      console.log('[tools] probe dilewati: ' + ((te && te.message) || te));
+    }
+
+    // ===== FASE 2: streaming jawaban akhir =====
     const upstream = await tryKeys(keys, async (key) => {
       const keyNo = keys.indexOf(key) + 1;
       const doChat = async (temp) => {
         const ctl = new AbortController();
         const totalTimer = setTimeout(() => ctl.abort(), 600000);
         let firstByteTimedOut = false;
-        // Timeout per provider: timeout_<provider> (detik), mis. timeout_tnt=30. Kalau tidak ada, pakai global.
         let fbTimeout = TEXT_FIRST_BYTE_TIMEOUT;
         if (entry && entry.provider) {
           const pv = parseFloat(process.env['timeout_' + entry.provider]);
@@ -772,9 +844,8 @@ app.post('/api/chat', async (req, res) => {
         }
         const firstByteTimer = setTimeout(() => { firstByteTimedOut = true; ctl.abort(); }, fbTimeout * 1000);
         try {
-          const payload = { model: useModel, messages: outMessages, stream: true };
+          const payload = { model: useModel, messages: finalMessages, stream: true };
           if (temp !== null && temp !== undefined) payload.temperature = temp;
-          // Batas output: dari env MAX_TOKENS, default 8000 biar jawaban panjang tidak kepotong provider.
           const mt = parseInt(process.env.MAX_TOKENS || '8000', 10);
           if (Number.isFinite(mt) && mt > 0) payload.max_tokens = mt;
           console.log('[chat] key ' + keyNo + '/' + keys.length + ' -> ' + useModel);
@@ -784,7 +855,7 @@ app.post('/api/chat', async (req, res) => {
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
             body: JSON.stringify(payload),
           });
-          clearTimeout(firstByteTimer); // header diterima, stream boleh lama
+          clearTimeout(firstByteTimer);
           return r;
         } catch (e) {
           if (e && e.name === 'AbortError' && firstByteTimedOut) {
@@ -796,8 +867,6 @@ app.post('/api/chat', async (req, res) => {
       let r = await doChat(TEXT_TEMPERATURE);
       if (!r.ok) {
         const txt = await r.text().catch(() => '');
-        // Sebagian model hanya mengizinkan nilai temperature tertentu ->
-        // coba lagi dengan 1, lalu tanpa field temperature sama sekali.
         if (/temperature/i.test(txt)) {
           r = (TEXT_TEMPERATURE !== 1) ? await doChat(1) : await doChat(null);
           if (r.ok) return r;
@@ -807,8 +876,6 @@ app.post('/api/chat', async (req, res) => {
       }
       return r;
     });
-    // Jika upstream tidak mengembalikan SSE (mis. Mortera mengabaikan stream:true
-    // dan mengirim JSON utuh), konversi ke format SSE agar frontend tetap jalan.
     const ct = (upstream.headers.get('content-type') || '').toLowerCase();
     if (!ct.includes('text/event-stream')) {
       let text = '';
@@ -831,7 +898,6 @@ app.post('/api/chat', async (req, res) => {
       });
       res.on('error', () => {});
       if (content) {
-        // Filter <think>...</think> reasoning blocks agar tidak bocor ke user
         content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
         const sse = 'data: ' + JSON.stringify({ choices: [{ delta: { content } }] }) + '\n\n';
         res.write(sse);
@@ -846,7 +912,6 @@ app.post('/api/chat', async (req, res) => {
       'Connection': 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
-    // Error tulis (mis. klien putus di tengah jalan) tidak boleh membunuh server
     res.on('error', () => {});
     const reader = upstream.body.getReader();
     let clientGone = false;
@@ -871,6 +936,7 @@ app.post('/api/chat', async (req, res) => {
     });
   }
 });
+
 
 // ---------- DeAPI v2: submit job lalu polling sampai selesai ----------
 // Endpoint v2 bersifat ASINKRON: POST hanya mengembalikan {data:{request_id}},
